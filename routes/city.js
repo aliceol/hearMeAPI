@@ -19,7 +19,7 @@ var inOneYear = moment()
   .format("YYYY-MM-DD");
 console.log(inOneYear);
 
-router.get("/:id", function(req, res) {
+router.get("/:id/:page", function(req, res) {
   // THE METRO AREA LOOK LIKE A NUMBER
   // FOR EXEMPLE PARIS IN FRANCE IS 28909
   axios
@@ -31,7 +31,9 @@ router.get("/:id", function(req, res) {
         "&min_date=" +
         today +
         "&max_date=" +
-        inOneYear
+        inOneYear +
+        "&page=" +
+        req.params.page
     )
     .then(function(response) {
       res.json({ response: response.data });

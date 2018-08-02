@@ -5,16 +5,33 @@ var router = express.Router();
 require("dotenv").config();
 const axios = require("axios");
 
+// WE DECLARE THE TODAY DATE
+
+const moment = require("moment");
+let today = moment().format("YYYY-MM-DD");
+
+var inOneYear = moment()
+  .add(1, "year")
+  .format("YYYY-MM-DD");
+console.log(inOneYear);
+
 // THIS ROUTE GIVE US THE CALENDAR OF AN ARTIST
 
-router.get("/:id", function(req, res) {
+router.get("/:id/:page", function(req, res) {
   // THE ID LOOK LIKE THIS 68043-gorillaz
   axios
     .get(
       "https://api.songkick.com/api/3.0/artists/" +
         req.params.id +
         "/calendar.json?apikey=" +
-        process.env.SONGKICK_API_SECRET
+        process.env.SONGKICK_API_SECRET +
+        "&min_date=" +
+        today +
+        "&max_date=" +
+        inOneYear +
+        "&page=" +
+        req.params.page +
+        "&per_page=20"
     )
     .then(function(response) {
       res.json({ response: response.data });
