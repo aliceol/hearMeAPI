@@ -230,9 +230,11 @@ router.get("/:id", function(req, res) {
                                       uri:
                                         response.data.resultsPage.results.event
                                           .uri,
-                                      title:
-                                        response.data.resultsPage.results.event
-                                          .displayName,
+                                      title: response.data.resultsPage.results
+                                        .event.displayName
+                                        ? response.data.resultsPage.results
+                                            .event.displayName
+                                        : "",
                                       performance: arrayArtists
                                     });
                                     event.save(function(err) {
