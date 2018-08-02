@@ -1,4 +1,5 @@
 var mongoose = require("mongoose");
+var Liana = require("forest-express-mongoose");
 
 const EventSchema = new mongoose.Schema({
   songKickId: Number,
@@ -9,6 +10,10 @@ const EventSchema = new mongoose.Schema({
   popularity: Number,
   uri: String,
   title: String,
+  start: Object,
+  ageMin: String,
+  eventType: String,
+
   performance: [
     {
       artist: {
@@ -16,6 +21,44 @@ const EventSchema = new mongoose.Schema({
         ref: "Artist"
       },
       position: Number
+    }
+  ]
+});
+
+Liana.collection("users", {
+  fields: [
+    {
+      field: "fullname",
+      type: "String",
+      get: function(object) {
+        return object.firstName + " " + object.lastName;
+      }
+    }
+  ]
+});
+
+Liana.collection("Event", {
+  fields: [
+    {
+      field: "Date et Heure",
+      type: "String",
+      get: function(object) {
+        return object.start
+          ? `${object.start.date} ${object.start.time}`
+          : "N/A";
+      }
+    }
+  ]
+});
+
+Liana.collection("Event", {
+  fields: [
+    {
+      field: "Age minimum",
+      type: "String",
+      get: function(string) {
+        return string.ageMin ? string.ageMin : "N/A";
+      }
     }
   ]
 });

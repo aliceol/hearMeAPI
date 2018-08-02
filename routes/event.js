@@ -107,21 +107,24 @@ router.get("/:id", function(req, res) {
                                 position: artists[i].position
                               });
                               if (i === artists.length - 1) {
+                                let thisEvent =
+                                  response.data.resultsPage.resultsPage.results
+                                    .event;
+
                                 console.log("arrayArtists", arrayArtists);
                                 const event = new Event({
-                                  songKickId:
-                                    response.data.resultsPage.results.event.id,
+                                  songKickId: thisEvent.id,
                                   venue: obj,
-                                  popularity:
-                                    response.data.resultsPage.results.event
-                                      .popularity,
-                                  uri:
-                                    response.data.resultsPage.results.event.uri,
-                                  title:
-                                    response.data.resultsPage.results.event
-                                      .displayName,
-                                  performance: arrayArtists
+                                  popularity: thisEvent.popularity,
+                                  uri: thisEvent.uri,
+                                  title: thisEvent.displayName,
+                                  performance: arrayArtists,
+                                  start: thisEvent.start,
+                                  ageMin: thisEvent.ageRestriction,
+                                  eventType: thisEvent.type
                                 });
+
+                                console.log(event.start);
                                 event.save(function(err) {
                                   if (err) {
                                     return res.json(err.message);
@@ -202,12 +205,14 @@ router.get("/:id", function(req, res) {
                             } else {
                               console.log("artist DOES NOT exist");
                               // THE ARTIST IS UNKNOW SO WE CREATE A NEW ONE IN OUR DB
+
                               const newArtist = new Artist({
                                 uri: artists[i].artist.uri,
                                 displayName: artists[i].artist.displayName,
                                 songKickId: artists[i].artist.id,
-                                identifier: artists[i].artist.identifier.href // A LINK TO HIS SONGKICK PROFIL
+                                identifier: artists[i].artist.identifier[0].mbid // A LINK TO HIS SONGKICK PROFIL
                               });
+
                               newArtist.save((err, artist) => {
                                 if (err) {
                                   console.log(err);
@@ -235,8 +240,18 @@ router.get("/:id", function(req, res) {
                                         ? response.data.resultsPage.results
                                             .event.displayName
                                         : "",
-                                      performance: arrayArtists
+                                      performance: arrayArtists,
+                                      start:
+                                        response.data.resultsPage.results.event
+                                          .start,
+                                      ageMin:
+                                        response.data.resultsPage.results.event
+                                          .ageRestriction,
+                                      eventType:
+                                        response.data.resultsPage.results.event
+                                          .type
                                     });
+                                    console.log;
                                     event.save(function(err) {
                                       if (err) {
                                         return res.json(err.message);
