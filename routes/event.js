@@ -5,6 +5,9 @@ var router = express.Router();
 require("dotenv").config();
 const axios = require("axios");
 
+/* FUNCTIONS */
+const { doesEventExists } = require("../lib/songKick");
+
 //TO SAVE THE DATA I NEED TO IMPORT THE DIFFERENT SCHEMAS
 
 var Event = require("../models/Event.js");
@@ -16,12 +19,12 @@ var Venue = require("../models/Venue.js");
 
 router.get("/:id", function(req, res) {
   // WE ARE LOOKING IN OUR DATABASE IF WE CAN FIND AN EVENT WITH THE SAME ID
-
   Event.findOne({ songKickId: req.params.id }).exec(function(err, obj) {
     if (err) {
       // IF THIS ID ISN'T RELATED TO AN EVENT
       res.status(400).json({ error: "An error occured" });
     } else {
+      console.log("obj", obj);
       if (obj === null) {
         // IF THE EVENT THAT WE ARE LOOKING FOR IS NOT IN OUR DATA BASE
         axios
@@ -44,12 +47,14 @@ router.get("/:id", function(req, res) {
               } else {
                 const arrayArtists = [];
                 if (obj) {
+                  console.log(
+                    "il y a une venue",
+                    response.data.resultsPage.results
+                  );
                   // IF THE VENUE ALREADY EXISTS IN THE DATA BASE, WE NEED TO KNOW IF THE ARTISTS PLAYING
                   // THERE ARE IN THE DB
-                  let artists = [];
 
-                  // MOST OF THE TIMES, SEVERAL ARTISTS PLAYS IN THE SAME NIGHT OR EVENT SO WE NEED A FOR
-                  // TO KNOW IF THEY ARE ALL IN THE DB
+                  const artists = [];
 
                   for (
                     let i = 0;
@@ -66,11 +71,11 @@ router.get("/:id", function(req, res) {
                           .billingIndex
                     });
                   }
+                  console.log("artists", artists);
 
-                  artists.forEach(obj => {
-                    // WE ARE LOOKING EVERY ARTISTS ONE BY ONE WITH THERE IDS
+                  for (let i = 0; i < artists.length; i++) {
                     Artist.findOne({
-                      songKickId: obj.artist.id
+                      songKickId: artists[i].artist.id
                     }).exec(err, artist => {
                       if (err) {
                         // IF THE ARTIST ID DOES NOT EXISTS
@@ -81,52 +86,60 @@ router.get("/:id", function(req, res) {
                           // IF THE ARTIST IS ALREADY KNOW BY OUR DB, WE JUST PUSH THESE INFOS FROM OUR DB TO AN ARRAY
                           arrayArtists.push({
                             artist: artists.artist,
-                            position: obj.position
+                            position: artists[i].position
                           });
                         } else {
                           console.log("artist DOES NOT exist");
                           // THE ARTIST IS UNKNOW SO WE CREATE A NEW ONE IN OUR DB
                           const newArtist = new Artist({
-                            uri: obj.artist.uri,
-                            displayName: obj.artist.displayName,
-                            songKickId: obj.artist.id,
-                            identifier: obj.artist.identifier.href // A LINK TO HIS SONGKICK PROFIL
+                            uri: artists[i].artist.uri,
+                            displayName: artists[i].artist.displayName,
+                            songKickId: artists[i].artist.id,
+                            identifier: artists[i].artist.identifier.href // A LINK TO HIS SONGKICK PROFIL
                           });
                           newArtist.save((err, artist) => {
-                            console.log("newArtist.save", artist);
                             if (err) {
                               console.log(err);
                             } else {
                               // WE SAVE IT THEN WE PUSH THE INFOS THAT WE NEED IN AN ARRAY THAT WILL BE RETURN TO OUR USERS
                               arrayArtists.push({
                                 artist: artist._id,
-                                position: obj.position
+                                position: artists[i].position
                               });
+                              if (i === artists.length - 1) {
+                                console.log("arrayArtists", arrayArtists);
+                                const event = new Event({
+                                  songKickId:
+                                    response.data.resultsPage.results.event.id,
+                                  venue: obj,
+                                  popularity:
+                                    response.data.resultsPage.results.event
+                                      .popularity,
+                                  uri:
+                                    response.data.resultsPage.results.event.uri,
+                                  title:
+                                    response.data.resultsPage.results.event
+                                      .displayName,
+                                  performance: arrayArtists
+                                });
+                                event.save(function(err) {
+                                  if (err) {
+                                    return res.json(err.message);
+                                  } else {
+                                    return res.json({
+                                      response: response.data
+                                    });
+                                  }
+                                });
+                              }
                             }
                           });
                         }
                       }
                     });
-                  });
-                  console.log(arrayArtists);
-                  // NOW THAT ALL THE ARTISTS ARE REGISTRED IN OUR DB, WE CAN RETURN THE EVENT INFOS THAT THE USER WAS LOKKING FOR
-                  const event = new Event({
-                    songKickId: response.data.resultsPage.results.event.id,
-                    venue: obj,
-                    popularity:
-                      response.data.resultsPage.results.event.popularity,
-                    uri: response.data.resultsPage.results.event.uri,
-                    title: response.data.resultsPage.results.event.displayName,
-                    performance: arrayArtists
-                  });
-                  event.save(function(err) {
-                    if (err) {
-                      return res.json(err.message);
-                    } else {
-                      return res.json({ response: response.data });
-                    }
-                  });
+                  }
                 } else {
+                  console.log("il n'y a pas de venue");
                   // IF THE VENUE IS NOT IN THE DB
                   const venue = response.data.resultsPage.results.event.venue;
                   const newVenue = new Venue({
@@ -238,48 +251,6 @@ router.get("/:id", function(req, res) {
                           }
                         });
                       }
-                      /*                       artists.forEach(obj => {
-                        // WE ARE LOOKING EVERY ARTISTS ONE BY ONE WITH THERE IDS
-                        Artist.findOne({
-                          songKickId: obj.artist.id
-                        }).exec(err, artist => {
-                          if (err) {
-                            // IF THE ARTIST ID DOES NOT EXISTS
-                            console.log(err);
-                          } else {
-                            if (artist) {
-                              console.log("artist already exists");
-                              // IF THE ARTIST IS ALREADY KNOW BY OUR DB, WE JUST PUSH THESE INFOS FROM OUR DB TO AN ARRAY
-                              arrayArtists.push({
-                                artist: artists.artist,
-                                position: obj.position
-                              });
-                            } else {
-                              console.log("artist DOES NOT exist");
-                              // THE ARTIST IS UNKNOW SO WE CREATE A NEW ONE IN OUR DB
-                              const newArtist = new Artist({
-                                uri: obj.artist.uri,
-                                displayName: obj.artist.displayName,
-                                songKickId: obj.artist.id,
-                                identifier: obj.artist.identifier.href // A LINK TO HIS SONGKICK PROFIL
-                              });
-                              newArtist.save((err, artist) => {
-                                if (err) {
-                                  console.log(err);
-                                } else {
-                                  // WE SAVE IT THEN WE PUSH THE INFOS THAT WE NEED IN AN ARRAY THAT WILL BE RETURN TO OUR USERS
-                                  arrayArtists.push({
-                                    artist: artist._id,
-                                    position: obj.position
-                                  });
-                                  console.log("--->", arrayArtists);
-                                }
-                              });
-                            }
-                          }
-                        });
-                      }); */
-                      // NOW THAT ALL THE ARTISTS ARE REGISTRED IN OUR DB, WE CAN RETURN THE EVENT INFOS THAT THE USER WAS LOKKING FOR
                     }
                   });
                 }
