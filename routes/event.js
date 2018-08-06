@@ -88,8 +88,8 @@ router.get("/:id", function(req, res) {
                             const newArtist = new Artist({
                               uri: artists[i].artist.uri,
                               displayName: artists[i].artist.displayName,
-                              songKickId: artists[i].artist.id,
-                              identifier: artists[i].artist.identifier.href // A LINK TO HIS SONGKICK PROFIL
+                              songKickId: artists[i].artist.id
+                              // identifier: artists[i].artist.identifier.href // A LINK TO HIS SONGKICK PROFIL
                             });
                             newArtist.save((err, artist) => {
                               if (err) {
@@ -192,9 +192,9 @@ router.get("/:id", function(req, res) {
                                 const newArtist = new Artist({
                                   uri: artists[i].artist.uri,
                                   displayName: artists[i].artist.displayName,
-                                  songKickId: artists[i].artist.id,
-                                  identifier:
-                                    artists[i].artist.identifier[0].mbid // A LINK TO HIS SONGKICK PROFIL
+                                  songKickId: artists[i].artist.id
+                                  // identifier:
+                                  //   artists[i].artist.identifier[0].mbid // A LINK TO HIS SONGKICK PROFIL
                                 });
 
                                 newArtist.save((err, artist) => {
