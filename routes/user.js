@@ -61,7 +61,9 @@ router.post("/log_in", function(req, res, next) {
   });
 });
 
-router.get("/add/artist/:id", isAuthenticated, function(req, res) {
+// A ROUTE TO ADD AND REMOVE ARTIST FROM THE USER4S FAVORITES
+
+router.get("/like/artist/:id", isAuthenticated, function(req, res) {
   axios
     .get(
       "https://api.songkick.com/api/3.0/artists/" +
@@ -70,13 +72,31 @@ router.get("/add/artist/:id", isAuthenticated, function(req, res) {
         process.env.SONGKICK_API_SECRET
     )
     .then(function(response) {
-      console.log(response.data.resultsPage.results);
       if (req.user.favArtists.indexOf(req.params.id) !== -1) {
-        res.json("L'artiste est déjà dans vos favoris");
+        // IF THE ARTIST ALREADY EXIST IN HIS OR HER FAVORITES
+        for (let i = 0; i < req.user.favArtists.length; i++) {
+          if (req.user.favArtists[i] === req.params.id) {
+            req.user.favArtists.splice(i, 1);
+            // WE DELETE IT FROM THE ARRAY
+            req.user.save(function(err) {
+              // THEN SAVE
+              if (err) {
+                return next(err.message);
+              } else {
+                return res.json({
+                  favArtists: req.user.favArtists
+                });
+              }
+            });
+          }
+        }
       } else {
+        // IF IT DIDN'T NOT EXIST YET
         req.user.favArtists.push(req.params.id);
+        // WE PUSH IT IN THE ARRAY
 
         req.user.save(function(err) {
+          // THEN SAVE IT
           if (err) {
             return next(err.message);
           } else {
@@ -88,8 +108,7 @@ router.get("/add/artist/:id", isAuthenticated, function(req, res) {
       }
     })
     .catch(function(error) {
-      console.log("oups");
-      res.json({ response: error });
+      res.status(404).json("Page introuvable");
     });
 });
 
@@ -102,13 +121,32 @@ router.get("/add/event/:id", isAuthenticated, function(req, res) {
         process.env.SONGKICK_API_SECRET
     )
     .then(function(response) {
-      console.log(response.data.resultsPage.results);
+      // IF THE EVENR ALREADY EXIST IN THE ARRAY, WE DELETE IT
       if (req.user.events.indexOf(req.params.id) !== -1) {
-        res.json("L'event est déjà dans vos favoris");
+        for (let i = 0; i < req.user.events.length; i++) {
+          // WE FOUND IT ITH A FOR
+          if (req.user.events[i] === req.params.id) {
+            req.user.events.splice(i, 1);
+            // DELETE IT WHEN WE FOUND IT
+            req.user.save(function(err) {
+              // THEN SAVE THE ARRAY
+              if (err) {
+                return next(err.message);
+              } else {
+                return res.json({
+                  events: req.user.events
+                });
+              }
+            });
+          }
+        }
       } else {
+        // IF THE EVENT DOES NOT EXIST YET
         req.user.events.push(req.params.id);
+        // WE PUSH IT IN THE ARRAY
 
         req.user.save(function(err) {
+          // THEN WE SAVE IT
           if (err) {
             return next(err.message);
           } else {
@@ -120,72 +158,7 @@ router.get("/add/event/:id", isAuthenticated, function(req, res) {
       }
     })
     .catch(function(error) {
-      console.log("oups");
-      res.json({ response: error });
-    });
-});
-
-router.get("/remove/artist/:id", isAuthenticated, function(req, res) {
-  axios
-    .get(
-      "https://api.songkick.com/api/3.0/artists/" +
-        req.params.id +
-        "/calendar.json?apikey=" +
-        process.env.SONGKICK_API_SECRET
-    )
-    .then(function(response) {
-      if (req.user.favArtists.indexOf(req.params.id) !== -1) {
-        for (let i = 0; i < req.user.favArtists.length - 1; i++) {
-          if (req.user.favArtists[i] === req.params.id) {
-            req.user.favArtists.splice(i, 1);
-            req.user.save(function(err) {
-              if (err) {
-                return next(err.message);
-              } else {
-                return res.json({
-                  favArtists: req.user.favArtists
-                });
-              }
-            });
-          }
-        }
-      }
-    })
-    .catch(function(error) {
-      console.log("oups");
-      res.json({ response: error });
-    });
-});
-
-router.get("/remove/event/:id", isAuthenticated, function(req, res) {
-  axios
-    .get(
-      "https://api.songkick.com/api/3.0/events/" +
-        req.params.id +
-        ".json?apikey=" +
-        process.env.SONGKICK_API_SECRET
-    )
-    .then(function(response) {
-      if (req.user.events.indexOf(req.params.id) !== -1) {
-        for (let i = 0; i < req.user.events.length - 1; i++) {
-          if (req.user.events[i] === req.params.id) {
-            req.user.events.splice(i, 1);
-            req.user.save(function(err) {
-              if (err) {
-                return next(err.message);
-              } else {
-                return res.json({
-                  events: req.user.events
-                });
-              }
-            });
-          }
-        }
-      }
-    })
-    .catch(function(error) {
-      console.log("oups");
-      res.json({ response: error });
+      res.status(404).json("Page introuvable");
     });
 });
 

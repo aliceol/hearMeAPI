@@ -34,10 +34,12 @@ router.get("/:id/:page", function(req, res) {
         "&per_page=20"
     )
     .then(function(response) {
+      axios.get("");
+
       res.json({ response: response.data });
     })
     .catch(function(error) {
-      res.json({ response: error });
+      rres.status(404).json("Page introuvable");
     });
 });
 
