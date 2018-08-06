@@ -21,12 +21,12 @@ router.get("/:id", function(req, res) {
   // WE ARE LOOKING IN OUR DATABASE IF WE CAN FIND AN EVENT WITH THE SAME ID
   Event.findOne({ songKickId: req.params.id })
     .populate("venue")
+    .populate("performance.artist")
     .exec(function(err, obj) {
       if (err) {
         // IF THIS ID ISN'T RELATED TO AN EVENT
         res.status(400).json({ error: "An error occured" });
       } else {
-        console.log("obj", obj);
         if (obj === null) {
           // IF THE EVENT THAT WE ARE LOOKING FOR IS NOT IN OUR DATA BASE
           axios
@@ -45,14 +45,9 @@ router.get("/:id", function(req, res) {
                 songKickId: response.data.resultsPage.results.event.venue.id
               }).exec(err, obj => {
                 if (err) {
-                  console.log(err);
                 } else {
                   const arrayArtists = [];
                   if (obj) {
-                    console.log(
-                      "il y a une venue",
-                      response.data.resultsPage.results
-                    );
                     // IF THE VENUE ALREADY EXISTS IN THE DATA BASE, WE NEED TO KNOW IF THE ARTISTS PLAYING
                     // THERE ARE IN THE DB
 
@@ -74,7 +69,6 @@ router.get("/:id", function(req, res) {
                             .billingIndex
                       });
                     }
-                    console.log("artists", artists);
 
                     for (let i = 0; i < artists.length; i++) {
                       Artist.findOne({
@@ -82,17 +76,14 @@ router.get("/:id", function(req, res) {
                       }).exec(err, artist => {
                         if (err) {
                           // IF THE ARTIST ID DOES NOT EXISTS
-                          console.log(err);
                         } else {
                           if (artist) {
-                            console.log("artist already exists");
                             // IF THE ARTIST IS ALREADY KNOW BY OUR DB, WE JUST PUSH THESE INFOS FROM OUR DB TO AN ARRAY
                             arrayArtists.push({
                               artist: artists.artist,
                               position: artists[i].position
                             });
                           } else {
-                            console.log("artist DOES NOT exist");
                             // THE ARTIST IS UNKNOW SO WE CREATE A NEW ONE IN OUR DB
                             const newArtist = new Artist({
                               uri: artists[i].artist.uri,
@@ -102,7 +93,6 @@ router.get("/:id", function(req, res) {
                             });
                             newArtist.save((err, artist) => {
                               if (err) {
-                                console.log(err);
                               } else {
                                 // WE SAVE IT THEN WE PUSH THE INFOS THAT WE NEED IN AN ARRAY THAT WILL BE RETURN TO OUR USERS
                                 arrayArtists.push({
@@ -114,7 +104,6 @@ router.get("/:id", function(req, res) {
                                     response.data.resultsPage.resultsPage
                                       .results.event;
 
-                                  console.log("arrayArtists", arrayArtists);
                                   const event = new Event({
                                     songKickId: thisEvent.id,
                                     venue: obj,
@@ -127,7 +116,6 @@ router.get("/:id", function(req, res) {
                                     eventType: thisEvent.type
                                   });
 
-                                  console.log(event.start);
                                   event.save(function(err) {
                                     if (err) {
                                       return res.json(err.message);
@@ -145,7 +133,6 @@ router.get("/:id", function(req, res) {
                       });
                     }
                   } else {
-                    console.log("il n'y a pas de venue");
                     // IF THE VENUE IS NOT IN THE DB
                     const venue = response.data.resultsPage.results.event.venue;
                     const newVenue = new Venue({
@@ -165,7 +152,6 @@ router.get("/:id", function(req, res) {
                     newVenue.save((err, venue) => {
                       // THEN WE SAVE IT IN OUR DB
                       if (err) {
-                        console.log(err);
                       } else {
                         // AGAIN WE WANT TO KNOW IF WE KNOW ALL THE ARTISTS PLAYING DURING THIS EVENT
                         const artists = [];
@@ -186,7 +172,6 @@ router.get("/:id", function(req, res) {
                                 .performance[i].billingIndex
                           });
                         }
-                        console.log("artists", artists);
 
                         for (let i = 0; i < artists.length; i++) {
                           Artist.findOne({
@@ -194,17 +179,14 @@ router.get("/:id", function(req, res) {
                           }).exec(err, artist => {
                             if (err) {
                               // IF THE ARTIST ID DOES NOT EXISTS
-                              console.log(err);
                             } else {
                               if (artist) {
-                                console.log("artist already exists");
                                 // IF THE ARTIST IS ALREADY KNOW BY OUR DB, WE JUST PUSH THESE INFOS FROM OUR DB TO AN ARRAY
                                 arrayArtists.push({
                                   artist: artists.artist,
                                   position: artists[i].position
                                 });
                               } else {
-                                console.log("artist DOES NOT exist");
                                 // THE ARTIST IS UNKNOW SO WE CREATE A NEW ONE IN OUR DB
 
                                 const newArtist = new Artist({
@@ -217,7 +199,6 @@ router.get("/:id", function(req, res) {
 
                                 newArtist.save((err, artist) => {
                                   if (err) {
-                                    console.log(err);
                                   } else {
                                     // WE SAVE IT THEN WE PUSH THE INFOS THAT WE NEED IN AN ARRAY THAT WILL BE RETURN TO OUR USERS
                                     arrayArtists.push({
@@ -225,7 +206,6 @@ router.get("/:id", function(req, res) {
                                       position: artists[i].position
                                     });
                                     if (i === artists.length - 1) {
-                                      console.log("arrayArtists", arrayArtists);
                                       const event = new Event({
                                         songKickId:
                                           response.data.resultsPage.results
@@ -253,7 +233,7 @@ router.get("/:id", function(req, res) {
                                           response.data.resultsPage.results
                                             .event.type
                                       });
-                                      console.log;
+
                                       event.save(function(err) {
                                         if (err) {
                                           return res.json(err.message);
