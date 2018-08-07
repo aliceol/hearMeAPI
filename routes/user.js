@@ -41,59 +41,56 @@ router.post("/sign_up", function(req, res, next) {
 });
 
 router.post("/log_in", function(req, res, next) {
-  User.findOne({ "account.email": req.body.email }).exec(function(err, user) {
-    if (err) return next(err.message);
-    if (user) {
-      if (
-        SHA256(req.body.password + user.salt).toString(encBase64) === user.hash
-      ) {
-        return res.json({
-          _id: user._id,
-          token: user.token,
-          account: user.account
-        });
+  User.findOne({ "account.email": req.body.email })
+    .populate("")
+    .exec(function(err, user) {
+      if (err) return next(err.message);
+      if (user) {
+        if (
+          SHA256(req.body.password + user.salt).toString(encBase64) ===
+          user.hash
+        ) {
+          return res.json({
+            _id: user._id,
+            token: user.token,
+            account: user.account
+          });
+        } else {
+          return res.status(401).json({ error: "Unauthorized" });
+        }
       } else {
-        return res.status(401).json({ error: "Unauthorized" });
+        return next("User not found");
       }
-    } else {
-      return next("User not found");
-    }
-  });
+    });
 });
 
 // A ROUTE TO ADD AND REMOVE ARTIST FROM THE USER4S FAVORITES
 
-router.get("/like/artist/:id", isAuthenticated, function(req, res) {
-  axios
-    .get(
-      "https://api.songkick.com/api/3.0/artists/" +
-        req.params.id +
-        "/calendar.json?apikey=" +
-        process.env.SONGKICK_API_SECRET
-    )
-    .then(function(response) {
-      if (req.user.favArtists.indexOf(req.params.id) !== -1) {
-        // IF THE ARTIST ALREADY EXIST IN HIS OR HER FAVORITES
-        for (let i = 0; i < req.user.favArtists.length; i++) {
-          if (req.user.favArtists[i] === req.params.id) {
-            req.user.favArtists.splice(i, 1);
-            // WE DELETE IT FROM THE ARRAY
-            req.user.save(function(err) {
-              // THEN SAVE
-              if (err) {
-                return next(err.message);
-              } else {
-                return res.json({
-                  favArtists: req.user.favArtists
-                });
-              }
+router.get("/like/artist/:id", isAuthenticated, function(req, res, next) {
+  Artist.findOne({ songKickId: req.params.id }).exec((err, artist) => {
+    if (err) {
+      res.json(err);
+    } else {
+      console.log("-------", req.user.favArtists);
+      console.log("-------", req.user.favArtists.indexOf(artist.songKickId));
+      if (req.user.favArtists.indexOf(artist._id) !== -1) {
+        const index = req.user.favArtists.indexOf(artist._id);
+        req.user.favArtists.splice(index, 1);
+        // WE DELETE IT FROM THE ARRAY
+        req.user.save(function(err) {
+          // THEN SAVE
+          if (err) {
+            return next(err.message);
+          } else {
+            return res.json({
+              favArtists: req.user.favArtists
             });
           }
-        }
+        });
       } else {
-        // IF IT DIDN'T NOT EXIST YET
-        req.user.favArtists.push(req.params.id);
-        // WE PUSH IT IN THE ARRAY
+        console.log(artist);
+        req.user.favArtists.push(artist);
+        console.log("fav", req.user.favArtists);
 
         req.user.save(function(err) {
           // THEN SAVE IT
@@ -106,47 +103,34 @@ router.get("/like/artist/:id", isAuthenticated, function(req, res) {
           }
         });
       }
-    })
-    .catch(function(error) {
-      res.status(404).json("Page introuvable");
-    });
+    }
+  });
 });
 
-router.get("/add/event/:id", isAuthenticated, function(req, res) {
-  axios
-    .get(
-      "https://api.songkick.com/api/3.0/events/" +
-        req.params.id +
-        ".json?apikey=" +
-        process.env.SONGKICK_API_SECRET
-    )
-    .then(function(response) {
-      // IF THE EVENR ALREADY EXIST IN THE ARRAY, WE DELETE IT
-      if (req.user.events.indexOf(req.params.id) !== -1) {
-        for (let i = 0; i < req.user.events.length; i++) {
-          // WE FOUND IT ITH A FOR
-          if (req.user.events[i] === req.params.id) {
-            req.user.events.splice(i, 1);
-            // DELETE IT WHEN WE FOUND IT
-            req.user.save(function(err) {
-              // THEN SAVE THE ARRAY
-              if (err) {
-                return next(err.message);
-              } else {
-                return res.json({
-                  events: req.user.events
-                });
-              }
+router.get("/add/event/:id", isAuthenticated, function(req, res, next) {
+  Event.findOne({ songKickId: req.params.id }).exec((err, event) => {
+    if (err) {
+      res.json(err);
+    } else {
+      if (req.user.events.indexOf(event._id) !== -1) {
+        const index = req.user.events.indexOf(event._id);
+        req.user.events.splice(index, 1);
+        // WE DELETE IT FROM THE ARRAY
+        req.user.save(function(err) {
+          // THEN SAVE
+          if (err) {
+            return next(err.message);
+          } else {
+            return res.json({
+              events: req.user.events
             });
           }
-        }
+        });
       } else {
-        // IF THE EVENT DOES NOT EXIST YET
-        req.user.events.push(req.params.id);
-        // WE PUSH IT IN THE ARRAY
+        req.user.events.push(event);
 
         req.user.save(function(err) {
-          // THEN WE SAVE IT
+          // THEN SAVE IT
           if (err) {
             return next(err.message);
           } else {
@@ -156,11 +140,59 @@ router.get("/add/event/:id", isAuthenticated, function(req, res) {
           }
         });
       }
-    })
-    .catch(function(error) {
-      res.status(404).json("Page introuvable");
-    });
+    }
+  });
 });
+
+// router.get("/add/event/:id", isAuthenticated, function(req, res) {
+//   axios
+//     .get(
+//       "https://api.songkick.com/api/3.0/events/" +
+//         req.params.id +
+//         ".json?apikey=" +
+//         process.env.SONGKICK_API_SECRET
+//     )
+//     .then(function(response) {
+//       // IF THE EVENR ALREADY EXIST IN THE ARRAY, WE DELETE IT
+//       if (req.user.events.indexOf(req.params.id) !== -1) {
+//         for (let i = 0; i < req.user.events.length; i++) {
+//           // WE FOUND IT ITH A FOR
+//           if (req.user.events[i] === req.params.id) {
+//             req.user.events.splice(i, 1);
+//             // DELETE IT WHEN WE FOUND IT
+//             req.user.save(function(err) {
+//               // THEN SAVE THE ARRAY
+//               if (err) {
+//                 return next(err.message);
+//               } else {
+//                 return res.json({
+//                   events: req.user.events
+//                 });
+//               }
+//             });
+//           }
+//         }
+//       } else {
+//         // IF THE EVENT DOES NOT EXIST YET
+//         req.user.events.push(req.params.id);
+//         // WE PUSH IT IN THE ARRAY
+
+//         req.user.save(function(err) {
+//           // THEN WE SAVE IT
+//           if (err) {
+//             return next(err.message);
+//           } else {
+//             return res.json({
+//               events: req.user.events
+//             });
+//           }
+//         });
+//       }
+//     })
+//     .catch(function(error) {
+//       res.status(404).json("Page introuvable");
+//     });
+// });
 
 router.get("/getMyLikes", isAuthenticated, function(req, res) {
   if (req.user) {

@@ -36,7 +36,16 @@ router.get("/upcoming/:id/:page", function(req, res) {
         req.params.page
     )
     .then(function(response) {
-      res.json({ response: response.data });
+      let myEvents = [];
+      for (let i = 0; i < response.data.resultsPage.results.event.length; i++) {
+        if (
+          response.data.resultsPage.results.event[i].venue.displayName !==
+          "Unknown venue"
+        ) {
+          myEvents.push(response.data.resultsPage.results.event[i]);
+        }
+      }
+      res.json({ response: myEvents });
     })
     .catch(function(error) {
       res.status(404).json("Page introuvable");
