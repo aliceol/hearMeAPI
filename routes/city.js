@@ -54,55 +54,68 @@ router.get("/upcoming/:id/:page", function(req, res) {
     });
 });
 
-router.get("/popular/:id/:page", function(req, res) {
+router.get("/popular/:id", function(req, res) {
   // THE METRO AREA LOOK LIKE A NUMBER
   // FOR EXEMPLE PARIS IN FRANCE IS 28909
-  axios
-    .get(
-      "https://api.songkick.com/api/3.0/metro_areas/" +
-        req.params.id +
-        "/calendar.json?apikey=" +
-        process.env.SONGKICK_API_SECRET +
-        "&min_date=" +
-        today +
-        "&max_date=" +
-        inOneYear +
-        "&page=" +
-        req.params.page
-    )
-    .then(function(response) {
-      const sort_by = function(field, reverse, primer) {
-        // THIS IS A FUNCTION TO SORT THE RESULTS BY A CERTAIN FIELD (NUMBER)
-        var key = primer
-          ? function(x) {
-              return primer(x[field]);
-            }
-          : function(x) {
-              return x[field];
-            };
 
-        reverse = !reverse ? 1 : -1;
-
-        return function(a, b) {
-          return (a = key(a)), (b = key(b)), reverse * ((a > b) - (b > a));
-        };
-      };
-
-      let myData = [];
-
-      for (let i = 0; i < response.data.resultsPage.results.event.length; i++) {
-        myData.push(response.data.resultsPage.results.event[i]);
-      }
-
-      myData.sort(sort_by("popularity", true, parseFloat));
-      // SORT BY POPULARITY
-
+<<<<<<< HEAD
       res.json(myData);
     })
+=======
+  const sort_by = function(field, reverse, primer) {
+    // THIS IS A FUNCTION TO SORT THE RESULTS BY A CERTAIN FIELD (NUMBER)
+    var key = primer
+      ? function(x) {
+          return primer(x[field]);
+        }
+      : function(x) {
+          return x[field];
+        };
+>>>>>>> popular events route updated with more events, to be finished
 
-    .catch(function(error) {
-      res.status(404).json("Page introuvable");
-    });
+    reverse = !reverse ? 1 : -1;
+
+    return function(a, b) {
+      return (a = key(a)), (b = key(b)), reverse * ((a > b) - (b > a));
+    };
+  };
+
+  let myData = [];
+  for (let i = 1; i <= 5; i++) {
+    axios
+      .get(
+        "https://api.songkick.com/api/3.0/metro_areas/" +
+          req.params.id +
+          "/calendar.json?apikey=" +
+          process.env.SONGKICK_API_SECRET +
+          "&min_date=" +
+          today +
+          "&max_date=" +
+          inOneYear +
+          "&page=" +
+          i
+      )
+      .then(function(response) {
+        for (
+          let j = 0;
+          j < response.data.resultsPage.results.event.length;
+          i++
+        ) {
+          myData.push(response.data.resultsPage.results.event[j]);
+          console.log("i ", i, " j ", j);
+        }
+        /* if (myData.length > 200) {
+          myData.sort(sort_by("popularity", true, parseFloat));
+          // SORT BY POPULARITY
+          console.log(myData);
+          res.json(myData); 
+        } */
+      })
+
+      .catch(function(error) {
+        res.status(404).json("Page introuvable");
+      });
+  }
 });
 
 // router.get("/popular/:id/:page", function(req, res) {
