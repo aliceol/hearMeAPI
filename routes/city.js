@@ -36,7 +36,18 @@ router.get("/upcoming/:id/:page", function(req, res) {
         req.params.page
     )
     .then(function(response) {
-      res.json({ response: response.data });
+      for (let i = 0; i < response.data.resultsPage.results.event.length; i++) {
+        let event = [];
+        if (
+          response.data.resultsPage.results.event[i].venue.displayName !==
+          "Unknown venue"
+        ) {
+          event.push(response.data.resultsPage.results.event[i]);
+        }
+        if (i === response.data.resultsPage.results.event.length - 1) {
+          res.json(event);
+        }
+      }
     })
     .catch(function(error) {
       res.status(404).json("Page introuvable");
@@ -87,8 +98,6 @@ router.get("/popular/:id/:page", function(req, res) {
       // SORT BY POPULARITY
 
       res.json(myData);
-
-      console.log(myData);
     })
 
     .catch(function(error) {

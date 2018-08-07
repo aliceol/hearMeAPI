@@ -8,8 +8,18 @@ const UserSchema = new mongoose.Schema({
     profilePic: String
   },
   loc: [],
-  favArtists: [String],
-  events: [String],
+  favArtists: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Artist"
+    }
+  ],
+  events: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event"
+    }
+  ],
   hash: String,
   salt: String,
   token: String
