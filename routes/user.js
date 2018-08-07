@@ -162,4 +162,20 @@ router.get("/add/event/:id", isAuthenticated, function(req, res) {
     });
 });
 
+router.get("/getMyLikes", isAuthenticated, function(req, res) {
+  if (req.user) {
+    res.json(req.user.favArtists);
+  } else {
+    res.json({ error: "there is an error" });
+  }
+});
+
+router.get("/getMyCalendar", isAuthenticated, function(req, res) {
+  if (req.user) {
+    res.json(req.user.events);
+  } else {
+    res.json({ error: "there is an error" });
+  }
+});
+
 module.exports = router;
