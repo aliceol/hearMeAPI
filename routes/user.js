@@ -67,81 +67,85 @@ router.post("/log_in", function(req, res, next) {
 // A ROUTE TO ADD AND REMOVE ARTIST FROM THE USER4S FAVORITES
 
 router.get("/like/artist/:id", isAuthenticated, function(req, res, next) {
-  Artist.findOne({ songKickId: req.params.id }).exec((err, artist) => {
-    if (err) {
-      res.json(err);
-    } else {
-      console.log("-------", req.user.favArtists);
-      console.log("-------", req.user.favArtists.indexOf(artist.songKickId));
-      if (req.user.favArtists.indexOf(artist._id) !== -1) {
-        const index = req.user.favArtists.indexOf(artist._id);
-        req.user.favArtists.splice(index, 1);
-        // WE DELETE IT FROM THE ARRAY
-        req.user.save(function(err) {
-          // THEN SAVE
-          if (err) {
-            return next(err.message);
-          } else {
-            return res.json({
-              favArtists: req.user.favArtists
-            });
-          }
-        });
+  Artist.findOne({ songKickId: req.params.id })
+    .populate("artist")
+    .exec((err, artist) => {
+      if (err) {
+        res.json(err);
       } else {
-        console.log(artist);
-        req.user.favArtists.push(artist);
-        console.log("fav", req.user.favArtists);
+        console.log("-------", req.user.favArtists);
+        console.log("-------", req.user.favArtists.indexOf(artist.songKickId));
+        if (req.user.favArtists.indexOf(artist._id) !== -1) {
+          const index = req.user.favArtists.indexOf(artist._id);
+          req.user.favArtists.splice(index, 1);
+          // WE DELETE IT FROM THE ARRAY
+          req.user.save(function(err) {
+            // THEN SAVE
+            if (err) {
+              return next(err.message);
+            } else {
+              return res.json({
+                favArtists: req.user.favArtists
+              });
+            }
+          });
+        } else {
+          console.log(artist);
+          req.user.favArtists.push(artist);
+          console.log("fav", req.user.favArtists);
 
-        req.user.save(function(err) {
-          // THEN SAVE IT
-          if (err) {
-            return next(err.message);
-          } else {
-            return res.json({
-              favArtists: req.user.favArtists
-            });
-          }
-        });
+          req.user.save(function(err) {
+            // THEN SAVE IT
+            if (err) {
+              return next(err.message);
+            } else {
+              return res.json({
+                favArtists: req.user.favArtists
+              });
+            }
+          });
+        }
       }
-    }
-  });
+    });
 });
 
 router.get("/add/event/:id", isAuthenticated, function(req, res, next) {
-  Event.findOne({ songKickId: req.params.id }).exec((err, event) => {
-    if (err) {
-      res.json(err);
-    } else {
-      if (req.user.events.indexOf(event._id) !== -1) {
-        const index = req.user.events.indexOf(event._id);
-        req.user.events.splice(index, 1);
-        // WE DELETE IT FROM THE ARRAY
-        req.user.save(function(err) {
-          // THEN SAVE
-          if (err) {
-            return next(err.message);
-          } else {
-            return res.json({
-              events: req.user.events
-            });
-          }
-        });
+  Event.findOne({ songKickId: req.params.id })
+    .populate("event")
+    .exec((err, event) => {
+      if (err) {
+        res.json(err);
       } else {
-        req.user.events.push(event);
+        if (req.user.events.indexOf(event._id) !== -1) {
+          const index = req.user.events.indexOf(event._id);
+          req.user.events.splice(index, 1);
+          // WE DELETE IT FROM THE ARRAY
+          req.user.save(function(err) {
+            // THEN SAVE
+            if (err) {
+              return next(err.message);
+            } else {
+              return res.json({
+                events: req.user.events
+              });
+            }
+          });
+        } else {
+          req.user.events.push(event);
 
-        req.user.save(function(err) {
-          // THEN SAVE IT
-          if (err) {
-            return next(err.message);
-          } else {
-            return res.json({
-              events: req.user.events
-            });
-          }
-        });
+          req.user.save(function(err) {
+            // THEN SAVE IT
+            if (err) {
+              return next(err.message);
+            } else {
+              return res.json({
+                events: req.user.events
+              });
+            }
+          });
+        }
       }
-    }
-  });
+    });
 });
 
 // router.get("/add/event/:id", isAuthenticated, function(req, res) {
