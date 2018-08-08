@@ -13,9 +13,14 @@ const { doesEventExists } = require("../lib/songKick");
 var Event = require("../models/Event.js");
 var Artist = require("../models/Artist.js");
 var Venue = require("../models/Venue.js");
+var getData = require("../components/getData.js");
 
 // THIS ROAD GIVE US ALL THE INFOS ABOUT AN EVENT.
 // WE NEED THE EVENT ID TO GET ALL OF THIS
+
+getData(
+  "https://www.songkick.com/concerts/33657974-bollock-brothers-at-raumstation-sternen"
+);
 
 router.get("/:id", function(req, res) {
   // WE ARE LOOKING IN OUR DATABASE IF WE CAN FIND AN EVENT WITH THE SAME ID
@@ -113,7 +118,14 @@ router.get("/:id", function(req, res) {
                                     performance: arrayArtists,
                                     start: thisEvent.start,
                                     ageMin: thisEvent.ageRestriction,
-                                    eventType: thisEvent.type
+                                    eventType: thisEvent.type,
+                                    photoURI: getData(thisEvent.uri).image.src,
+                                    aditionalDetails: getData(thisEvent.uri)
+                                      .aditionalDetails.text,
+                                    biography: getData(thisEvent.uri)
+                                      .biographies.artistBio,
+                                    biographyLink: getData(thisEvent.uri)
+                                      .biographies.link
                                   });
 
                                   event.save(function(err) {
@@ -200,48 +212,64 @@ router.get("/:id", function(req, res) {
                                 newArtist.save((err, artist) => {
                                   if (err) {
                                   } else {
-                                    // WE SAVE IT THEN WE PUSH THE INFOS THAT WE NEED IN AN ARRAY THAT WILL BE RETURN TO OUR USERS
+                                    // WE SAVE IT THEN WE PUSH THE INFOS THAT WE NEED IN AN ARRAY THAT WILL BE RETURNED TO OUR USERS
                                     arrayArtists.push({
                                       artist: artist._id,
                                       position: artists[i].position
                                     });
                                     if (i === artists.length - 1) {
-                                      const event = new Event({
-                                        songKickId:
-                                          response.data.resultsPage.results
-                                            .event.id,
-                                        venue: venue,
-                                        popularity:
-                                          response.data.resultsPage.results
-                                            .event.popularity,
-                                        uri:
-                                          response.data.resultsPage.results
-                                            .event.uri,
-                                        title: response.data.resultsPage.results
-                                          .event.displayName
-                                          ? response.data.resultsPage.results
-                                              .event.displayName
-                                          : "",
-                                        performance: arrayArtists,
-                                        start:
-                                          response.data.resultsPage.results
-                                            .event.start,
-                                        ageMin:
-                                          response.data.resultsPage.results
-                                            .event.ageRestriction,
-                                        eventType:
-                                          response.data.resultsPage.results
-                                            .event.type
-                                      });
+                                      let URI =
+                                        response.data.resultsPage.results.event
+                                          .uri;
 
-                                      event.save(function(err) {
-                                        if (err) {
-                                          return res.json(err.message);
-                                        } else {
-                                          return res.json({
-                                            response: response.data
-                                          });
-                                        }
+                                      new Promise((resolve, reject) => {
+                                        getData(URI)
+                                          .then(extraData => {
+                                            let thisEvent =
+                                              response.data.resultsPage.results
+                                                .event;
+                                            const event = new Event({
+                                              songKickId: thisEvent.id,
+                                              venue: venue,
+                                              popularity: thisEvent.popularity,
+                                              uri: URI,
+                                              title: thisEvent.displayName
+                                                ? thisEvent.displayName
+                                                : "",
+                                              performance: arrayArtists,
+                                              start: thisEvent.start,
+                                              ageMin: thisEvent.ageRestriction,
+                                              eventType: thisEvent.type,
+                                              photoURI: extraData.image
+                                                ? extraData.image[0].src
+                                                : null,
+                                              aditionalDetails: extraData.aditionalDetails
+                                                ? extraData.aditionalDetails[0]
+                                                    .text
+                                                : null,
+                                              biography: extraData
+                                                .biographies[0]
+                                                ? extraData.biographies[0]
+                                                    .artistBio
+                                                : null,
+                                              biographyLink: extraData
+                                                .biographies[0]
+                                                ? extraData.biographies[0].link
+                                                : null
+                                            });
+
+                                            event.save(function(err) {
+                                              if (err) {
+                                                return res.json(err.message);
+                                              } else {
+                                                return res.json({
+                                                  response: event
+                                                });
+                                              }
+                                            });
+                                            // resolve(data);
+                                          })
+                                          .catch(error => console.log(error));
                                       });
                                     }
                                   }
