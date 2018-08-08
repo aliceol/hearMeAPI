@@ -172,4 +172,15 @@ router.get("/getMyInfo", isAuthenticated, function(req, res) {
   }
 });
 
+router.post("/uploadPicture", isAuthenticated, uploadPictures, function(
+  req,
+  res
+) {
+  if (req.user) {
+    res.json(req.user.account.profilePic);
+  } else {
+    res.json({ error: "there is an error" });
+  }
+});
+
 module.exports = router;
