@@ -148,56 +148,6 @@ router.get("/add/event/:id", isAuthenticated, function(req, res, next) {
     });
 });
 
-// router.get("/add/event/:id", isAuthenticated, function(req, res) {
-//   axios
-//     .get(
-//       "https://api.songkick.com/api/3.0/events/" +
-//         req.params.id +
-//         ".json?apikey=" +
-//         process.env.SONGKICK_API_SECRET
-//     )
-//     .then(function(response) {
-//       // IF THE EVENR ALREADY EXIST IN THE ARRAY, WE DELETE IT
-//       if (req.user.events.indexOf(req.params.id) !== -1) {
-//         for (let i = 0; i < req.user.events.length; i++) {
-//           // WE FOUND IT ITH A FOR
-//           if (req.user.events[i] === req.params.id) {
-//             req.user.events.splice(i, 1);
-//             // DELETE IT WHEN WE FOUND IT
-//             req.user.save(function(err) {
-//               // THEN SAVE THE ARRAY
-//               if (err) {
-//                 return next(err.message);
-//               } else {
-//                 return res.json({
-//                   events: req.user.events
-//                 });
-//               }
-//             });
-//           }
-//         }
-//       } else {
-//         // IF THE EVENT DOES NOT EXIST YET
-//         req.user.events.push(req.params.id);
-//         // WE PUSH IT IN THE ARRAY
-
-//         req.user.save(function(err) {
-//           // THEN WE SAVE IT
-//           if (err) {
-//             return next(err.message);
-//           } else {
-//             return res.json({
-//               events: req.user.events
-//             });
-//           }
-//         });
-//       }
-//     })
-//     .catch(function(error) {
-//       res.status(404).json("Page introuvable");
-//     });
-// });
-
 router.get("/getMyLikes", isAuthenticated, function(req, res) {
   if (req.user) {
     res.json(req.user.favArtists);
@@ -209,6 +159,14 @@ router.get("/getMyLikes", isAuthenticated, function(req, res) {
 router.get("/getMyCalendar", isAuthenticated, function(req, res) {
   if (req.user) {
     res.json(req.user.events);
+  } else {
+    res.json({ error: "there is an error" });
+  }
+});
+
+router.get("/getMyInfo", isAuthenticated, function(req, res) {
+  if (req.user) {
+    res.json(req.user.account.userName);
   } else {
     res.json({ error: "there is an error" });
   }
