@@ -1,6 +1,7 @@
 // import Cloudinary
 
 const cloudinary = require("cloudinary");
+require("dotenv").config();
 
 // Setting up cloudinary
 
@@ -11,7 +12,6 @@ cloudinary.config({
 });
 
 const uploadPictures = (req, res, next) => {
-  console.log("upload pictures");
   //initialize an empty array for my uploaded images
   const pictures = [];
   // I retrieve a array with the files
@@ -27,14 +27,15 @@ const uploadPictures = (req, res, next) => {
         file,
         {
           //Assign a specific folder in Cloudinary for each user
-          public_id: `dkqaenvhk/${req.user_id}`
+          public_id: `hearme/${req.user_id}`
         },
         (error, result) => {
-          console.log(error, result);
+          /* console.log(error, result); */
           if (error) {
             // if there is an error upload, I get out of my route
             return res.status(500).json({ error });
           }
+          console.log("upload OK");
           // else i push my image to to the array
           pictures.push(result);
           // and I increment the amount of uploaded images
@@ -42,7 +43,7 @@ const uploadPictures = (req, res, next) => {
           console.log("-------\n", result);
           // if the amount of uploaded pictures === the amount of sent files
           if (filesUploaded === files.length) {
-            res.pictures = pictures;
+            req.pictures = pictures;
             next();
           }
         }

@@ -6,6 +6,7 @@ const encBase64 = require("crypto-js/enc-base64");
 const axios = require("axios");
 
 var isAuthenticated = require("../middlewares/isAuthentificated");
+var uploadPictures = require("../middlewares/uploadPictures");
 
 var Event = require("../models/Event.js");
 var Artist = require("../models/Artist.js");
@@ -176,8 +177,8 @@ router.post("/uploadPicture", isAuthenticated, uploadPictures, function(
   req,
   res
 ) {
-  if (req.user) {
-    res.json(req.user.account.profilePic);
+  if (req.pictures.length) {
+    res.json(req.pictures[0]);
   } else {
     res.json({ error: "there is an error" });
   }
