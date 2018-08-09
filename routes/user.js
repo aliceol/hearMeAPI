@@ -173,18 +173,21 @@ router.get("/getMyCalendar", isAuthenticated, function(req, res) {
     const myEvents = [];
     for (let i = 0; i < req.user.events.length; i++) {
       console.log(req.user.events[i]);
-      Event.findOne({ _id: req.user.events[i] }).exec((err, event) => {
-        console.log(event);
-        if (err) {
-          res.json(err);
-        } else {
-          myEvents.push(event);
-          if (i === req.user.events.length - 1) {
-            console.log("hello", myEvents);
-            res.json(myEvents);
+      Event.findOne({ _id: req.user.events[i] })
+        .populate("venue")
+        .populate("artist")
+        .exec((err, event) => {
+          console.log(event);
+          if (err) {
+            res.json(err);
+          } else {
+            myEvents.push(event);
+            if (i === req.user.events.length - 1) {
+              console.log("hello", myEvents);
+              res.json(myEvents);
+            }
           }
-        }
-      });
+        });
     }
   } else {
     res.json({ error: "there is an error" });
