@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.js"
+
+    "dev": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+
   },
   "author": "HearMe",
   "license": "ISC",
@@ -21,6 +23,7 @@
     "moment": "^2.22.2",
     "mongoose": "^5.2.5",
     "router": "^1.3.3",
+    "scrape-it": "^5.0.5",
     "sha256": "^0.2.0",
     "uid2": "0.0.3"
   }

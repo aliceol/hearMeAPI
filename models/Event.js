@@ -13,6 +13,10 @@ const EventSchema = new mongoose.Schema({
   start: Object,
   ageMin: String,
   eventType: String,
+  photoURI: String,
+  aditionalDetails: String,
+  biography: String,
+  biographyLink: String,
 
   performance: [
     {
