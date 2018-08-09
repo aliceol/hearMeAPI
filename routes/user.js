@@ -110,47 +110,58 @@ router.get("/like/artist/:id", isAuthenticated, function(req, res, next) {
 });
 
 router.get("/add/event/:id", isAuthenticated, function(req, res, next) {
-  Event.findOne({ songKickId: req.params.id })
-    .populate("event")
-    .exec((err, event) => {
-      if (err) {
-        res.json(err);
+  Event.findOne({ songKickId: req.params.id }).exec((err, event) => {
+    if (err) {
+      res.json(err);
+    } else {
+      if (req.user.events.indexOf(event._id) !== -1) {
+        const index = req.user.events.indexOf(event._id);
+        req.user.events.splice(index, 1);
+        // WE DELETE IT FROM THE ARRAY
+        req.user.save(function(err) {
+          // THEN SAVE
+          if (err) {
+            return next(err.message);
+          } else {
+            return res.json({
+              events: req.user.events
+            });
+          }
+        });
       } else {
-        if (req.user.events.indexOf(event._id) !== -1) {
-          const index = req.user.events.indexOf(event._id);
-          req.user.events.splice(index, 1);
-          // WE DELETE IT FROM THE ARRAY
-          req.user.save(function(err) {
-            // THEN SAVE
-            if (err) {
-              return next(err.message);
-            } else {
-              return res.json({
-                events: req.user.events
-              });
-            }
-          });
-        } else {
-          req.user.events.push(event);
+        req.user.events.push(event);
 
-          req.user.save(function(err) {
-            // THEN SAVE IT
-            if (err) {
-              return next(err.message);
-            } else {
-              return res.json({
-                events: req.user.events
-              });
-            }
-          });
-        }
+        req.user.save(function(err) {
+          // THEN SAVE IT
+          if (err) {
+            return next(err.message);
+          } else {
+            return res.json({
+              events: req.user.events
+            });
+          }
+        });
       }
-    });
+    }
+  });
 });
 
 router.get("/getMyLikes", isAuthenticated, function(req, res) {
   if (req.user) {
-    res.json(req.user.favArtists);
+    const myArtists = [];
+    for (let i = 0; i < req.user.favArtists.length; i++) {
+      console.log(req.user.favArtists[i]);
+      Artist.findOne({ _id: req.user.favArtists[i] }).exec((err, artist) => {
+        if (err) {
+          res.json(err);
+        } else {
+          myArtists.push(artist);
+          if (i === req.user.favArtists.length - 1) {
+            res.json(myArtists);
+          }
+        }
+      });
+    }
   } else {
     res.json({ error: "there is an error" });
   }
@@ -158,7 +169,22 @@ router.get("/getMyLikes", isAuthenticated, function(req, res) {
 
 router.get("/getMyCalendar", isAuthenticated, function(req, res) {
   if (req.user) {
-    res.json(req.user.events);
+    const myEvents = [];
+    for (let i = 0; i < req.user.events.length; i++) {
+      console.log(req.user.events[i]);
+      Event.findOne({ _id: req.user.events[i] }).exec((err, event) => {
+        console.log(event);
+        if (err) {
+          res.json(err);
+        } else {
+          myEvents.push(event);
+          if (i === req.user.events.length - 1) {
+            console.log("hello", myEvents);
+            res.json(myEvents);
+          }
+        }
+      });
+    }
   } else {
     res.json({ error: "there is an error" });
   }
