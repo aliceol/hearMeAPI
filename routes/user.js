@@ -175,7 +175,7 @@ router.get("/getMyCalendar", isAuthenticated, function(req, res) {
       console.log(req.user.events[i]);
       Event.findOne({ _id: req.user.events[i] })
         .populate("venue")
-        .populate("artist")
+        .populate("performance.artist")
         .exec((err, event) => {
           console.log(event);
           if (err) {
