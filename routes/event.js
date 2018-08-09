@@ -262,9 +262,7 @@ router.get("/:id", function(req, res) {
                                               if (err) {
                                                 return res.json(err.message);
                                               } else {
-                                                return res.json({
-                                                  response: event
-                                                });
+                                                return res.json(event);
                                               }
                                             });
                                             // resolve(data);

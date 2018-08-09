@@ -17,7 +17,6 @@ let today = moment().format("YYYY-MM-DD");
 var inOneYear = moment()
   .add(1, "year")
   .format("YYYY-MM-DD");
-console.log(inOneYear);
 
 router.get("/upcoming/:id/:page", function(req, res) {
   // THE METRO AREA LOOK LIKE A NUMBER
@@ -113,7 +112,6 @@ router.get("/popular/:id", function(req, res) {
 
           myData.sort(sort_by("popularity", true, parseFloat));
           // SORT BY POPULARITY
-          console.log(myData);
         })
 
         .catch(function(error) {
