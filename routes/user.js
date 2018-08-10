@@ -202,15 +202,16 @@ router.get("/getMyInfo", isAuthenticated, function(req, res) {
   }
 });
 
-router.post("/uploadPicture", isAuthenticated, uploadPictures, function(
-  req,
-  res
-) {
-  if (req.pictures.length) {
-    res.json(req.pictures[0]);
-  } else {
-    res.json({ error: "there is an error" });
-  }
-});
+// router.post("/uploadPicture", isAuthenticated, uploadPictures, function(
+//   req,
+//   res
+// ) {
+//   if (req.pictures.length) {
+//     // res.json(req.pictures[0]);
+//     res.json({ message: "hello" });
+//   } else {
+//     res.json({ error: "there is an error" });
+//   }
+// });
 
 module.exports = router;
