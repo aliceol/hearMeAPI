@@ -35,10 +35,10 @@ router.get("/calendar/:id", function(req, res) {
         inOneYear
     )
     .then(function(response) {
-      res.json({ response: response.data });
+      res.json(response.data);
     })
     .catch(function(error) {
-      res.json({ response: error });
+      res.json(error);
     });
 });
 
