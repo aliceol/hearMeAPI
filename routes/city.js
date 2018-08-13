@@ -4,6 +4,7 @@ var router = express.Router();
 // var isAuthenticated = require("../middlewares/isAuthenticated");
 require("dotenv").config();
 const axios = require("axios");
+var getArtistImage = require("../components/getArtistImage.js");
 
 // ROUTE HOME AVEC METRO AREA PREDEFINIE. IL FAUDRA LA FAIRE VENIR
 // DES INFOS DU USER POUR LUI DONNER LES EVENTS PROCHE DE CHEZ LUI
@@ -37,15 +38,32 @@ router.get("/upcoming/:id/:page", function(req, res) {
     .then(function(response) {
       let event = [];
       for (let i = 0; i < response.data.resultsPage.results.event.length; i++) {
-        if (
-          response.data.resultsPage.results.event[i].venue.displayName !==
-          "Unknown venue"
-        ) {
-          event.push(response.data.resultsPage.results.event[i]);
-        }
+        let numberOfEvents = response.data.resultsPage.results.event.length;
+        new Promise((resolve, reject) => {
+          let oneEvent = response.data.resultsPage.results.event[i];
+
+          getArtistImage(oneEvent.performance[0].artist.uri).then(URI => {
+            console.log(i, oneEvent);
+            oneEvent.performance[0].artist.pictureURI = URI[0]
+              ? URI[0].src
+              : null;
+
+            if (
+              response.data.resultsPage.results.event[i].venue.displayName !==
+              "Unknown venue"
+            ) {
+              event.push(oneEvent);
+            } else {
+              numberOfEvents -= 1;
+            }
+            if (event.length === numberOfEvents) {
+              res.json(event);
+            }
+          });
+        });
       }
-      res.json(event);
     })
+
     .catch(function(error) {
       console.log(error);
       res.status(404).json("Page introuvable");
@@ -73,7 +91,62 @@ router.get("/popular/:id", function(req, res) {
     };
   };
 
-  let myData = [];
+  let gettingEventsPromises = [];
+
+  for (let i = 0; i < 5; i++) {
+    gettingEventsPromises.push(
+      axios.get(
+        "https://api.songkick.com/api/3.0/metro_areas/" +
+          req.params.id +
+          "/calendar.json?apikey=" +
+          process.env.SONGKICK_API_SECRET +
+          "&min_date=" +
+          today +
+          "&max_date=" +
+          inOneYear +
+          "&page=" +
+          i
+      )
+    );
+  }
+
+  Promise.all(gettingEventsPromises).then(values => {
+    let eventsByPop = [];
+    let gettingArtistsPicsPromises = [];
+    for (let i = 0; i < values.length; i++) {
+      for (
+        let j = 0;
+        j < values[i].data.resultsPage.results.event.length;
+        j++
+      ) {
+        gettingArtistsPicsPromises.push(
+          getArtistImage(
+            values[i].data.resultsPage.results.event[j].performance[0].artist
+              .uri
+          )
+        );
+        eventsByPop.push(values[i].data.resultsPage.results.event[j]);
+      }
+    }
+    Promise.all(gettingArtistsPicsPromises).then(URIObjects => {
+      for (let i = 0; i < URIObjects.length; i++) {
+        eventsByPop[i].performance[0].artist.pictureURI = URIObjects[i][0]
+          ? URIObjects[i][0].src
+          : null;
+      }
+
+      eventsByPop.sort(sort_by("popularity", true, parseFloat));
+      let eventsWithLocation = [];
+      for (let i = 0; i < eventsByPop.length; i++) {
+        if (eventsByPop[i].venue.displayName !== "Unknown venue") {
+          eventsWithLocation.push(eventsByPop[i]);
+        }
+      }
+      res.json(eventsWithLocation);
+    });
+  });
+
+  /*   let myData = [];
   let i = 1;
   const getData = function(i) {
     if (i <= 5) {
@@ -106,23 +179,25 @@ router.get("/popular/:id", function(req, res) {
           }
 
           for (let j = 0; j < event.length; j++) {
-            myData.push(event[j]);
+            myData.push({ popularity: event[j].popularity, index: j });
+            if (j === event.length - 1) {
+              getData(i + 1);
+            }
           }
-          getData(i + 1);
-
+        })
+        .then(() => {
           myData.sort(sort_by("popularity", true, parseFloat));
           // SORT BY POPULARITY
         })
-
         .catch(function(error) {
           res.status(404).json("Page introuvable");
         });
     } else {
-      res.json(myData);
+      //res.json(myData);
     }
   };
 
-  getData(1);
+  getData(1); */
 });
 
 // router.get("/popular/:id/:page", function(req, res) {

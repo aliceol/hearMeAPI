@@ -37,7 +37,6 @@ getEventImage = link =>
         }
       }
     }).then(({ data, response }) => {
-      console.log(`Status Code: ${response.statusCode}`);
       if (response.statusCode !== 200) {
         reject({ error: "an error occured ⚠️" });
       } else {
