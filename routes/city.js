@@ -43,7 +43,10 @@ router.get("/upcoming/:id/:page", function(req, res) {
           let oneEvent = response.data.resultsPage.results.event[i];
 
           getArtistImage(oneEvent.performance[0].artist.uri).then(URI => {
-            oneEvent.artistPicURI = URI[0] ? URI[0].src : null;
+            console.log(i, oneEvent);
+            oneEvent.performance[0].artist.pictureURI = URI[0]
+              ? URI[0].src
+              : null;
 
             if (
               response.data.resultsPage.results.event[i].venue.displayName !==
@@ -127,13 +130,19 @@ router.get("/popular/:id", function(req, res) {
     }
     Promise.all(gettingArtistsPicsPromises).then(URIObjects => {
       for (let i = 0; i < URIObjects.length; i++) {
-        eventsByPop[i].performance[0].artist.artistPicURI = URIObjects[i][0]
+        eventsByPop[i].performance[0].artist.pictureURI = URIObjects[i][0]
           ? URIObjects[i][0].src
           : null;
       }
 
       eventsByPop.sort(sort_by("popularity", true, parseFloat));
-      res.json(eventsByPop);
+      let eventsWithLocation = [];
+      for (let i = 0; i < eventsByPop.length; i++) {
+        if (eventsByPop[i].venue.displayName !== "Unknown venue") {
+          eventsWithLocation.push(eventsByPop[i]);
+        }
+      }
+      res.json(eventsWithLocation);
     });
   });
 
