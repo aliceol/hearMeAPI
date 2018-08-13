@@ -32,6 +32,8 @@ router.get("/upcoming/:id/:page", function(req, res) {
         today +
         "&max_date=" +
         inOneYear +
+        "&per_page" +
+        20 +
         "&page=" +
         req.params.page
     )
@@ -43,7 +45,6 @@ router.get("/upcoming/:id/:page", function(req, res) {
           let oneEvent = response.data.resultsPage.results.event[i];
 
           getArtistImage(oneEvent.performance[0].artist.uri).then(URI => {
-            console.log(i, oneEvent);
             oneEvent.performance[0].artist.pictureURI = URI[0]
               ? URI[0].src
               : null;
@@ -93,7 +94,7 @@ router.get("/popular/:id", function(req, res) {
 
   let gettingEventsPromises = [];
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 1; i <= 1; i++) {
     gettingEventsPromises.push(
       axios.get(
         "https://api.songkick.com/api/3.0/metro_areas/" +

@@ -150,9 +150,15 @@ router.get("/add/event/:id", isAuthenticated, function(req, res, next) {
 router.get("/getMyLikes", isAuthenticated, function(req, res) {
   if (req.user) {
     const myArtists = [];
+    const promises = [];
+    console.log("user", req.user);
     for (let i = 0; i < req.user.favArtists.length; i++) {
-      console.log(req.user.favArtists[i]);
-      Artist.findOne({ _id: req.user.favArtists[i] }).exec((err, artist) => {
+      promises.push(Artist.findOne({ _id: req.user.favArtists[i] }));
+    }
+    Promise.all(promises).then(artists => {
+      res.json(artists);
+    });
+    /*   Artist.findOne({ _id: req.user.favArtists[i] }).exec((err, artist) => {
         if (err) {
           res.json(err);
         } else {
@@ -161,8 +167,7 @@ router.get("/getMyLikes", isAuthenticated, function(req, res) {
             res.json(myArtists);
           }
         }
-      });
-    }
+      }); */
   } else {
     res.json({ error: "there is an error" });
   }
@@ -170,27 +175,30 @@ router.get("/getMyLikes", isAuthenticated, function(req, res) {
 
 router.get("/getMyCalendar", isAuthenticated, function(req, res) {
   if (req.user) {
-    const myEvents = [];
+    const promises = [];
     for (let i = 0; i < req.user.events.length; i++) {
-      console.log(req.user.events[i]);
-      Event.findOne({ _id: req.user.events[i] })
-        .populate("venue")
-        .populate("performance.artist")
-        .exec((err, event) => {
-          console.log(event);
-          if (err) {
-            res.json(err);
-          } else {
-            myEvents.push(event);
-            if (i === req.user.events.length - 1) {
-              console.log("hello", myEvents);
-              res.json(myEvents);
-            }
-          }
-        });
+
+      promises.push(Event.findOne({ _id: req.user.events[i] }));
     }
+
+    Promise.all(promises).then(events => {
+      res.json(events);
+    });
+    /* Event.findOne({ _id: req.user.events[i] }).exec((err, event) => {
+        if (err) {
+          res.json(err);
+        } else {
+          myEvents.push(event);
+          console.log(req.user.events.length);
+          console.log(i);
+          if (i === req.user.events.length - 1) {
+            res.json(myEvents);
+          }
+        }
+      }); */
+
   } else {
-    res.json({ error: "there is an error" });
+    //res.json({ error: "there is an error" });
   }
 });
 
