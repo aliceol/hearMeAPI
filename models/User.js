@@ -5,7 +5,7 @@ const UserSchema = new mongoose.Schema({
   account: {
     userName: { type: String, unique: true, required: true },
     email: { type: String, unique: true, required: true },
-    profilePic: String
+    profilePic: {}
   },
   loc: [],
   favArtists: [

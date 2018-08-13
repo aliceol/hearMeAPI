@@ -177,6 +177,7 @@ router.get("/getMyCalendar", isAuthenticated, function(req, res) {
   if (req.user) {
     const promises = [];
     for (let i = 0; i < req.user.events.length; i++) {
+
       promises.push(Event.findOne({ _id: req.user.events[i] }));
     }
 
@@ -195,6 +196,7 @@ router.get("/getMyCalendar", isAuthenticated, function(req, res) {
           }
         }
       }); */
+
   } else {
     //res.json({ error: "there is an error" });
   }
@@ -210,10 +212,17 @@ router.get("/getMyInfo", isAuthenticated, function(req, res) {
 
 router.post("/uploadPicture", isAuthenticated, uploadPictures, function(
   req,
-  res
+  res,
+  next
 ) {
   if (req.pictures.length) {
-    res.json(req.pictures[0]);
+    req.user.account.profilePic = req.pictures[0];
+    req.user.save(err => {
+      if (!err) {
+        return res.json(req.pictures[0]);
+      }
+      return next(err.message);
+    });
   } else {
     res.json({ error: "there is an error" });
   }
