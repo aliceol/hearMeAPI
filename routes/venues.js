@@ -19,23 +19,39 @@ console.log(inOneYear);
 
 // ROAD TO FIND A VENUE CALENDAR
 
-router.get("/calendar/:id", function(req, res) {
+router.get("/:id", function(req, res) {
   // EXEMPLE OF A VENUE ID :
   // LA CLAIRIERE 3294744-la-clairiere
 
   axios
     .get(
+      /* "https://api.songkick.com/api/3.0/venues/" +
+        req.params.id +
+        ".json?apikey=" +
+        process.env.SONGKICK_API_SECRET */
       "https://api.songkick.com/api/3.0/venues/" +
         req.params.id +
         "/calendar.json?apikey=" +
-        process.env.SONGKICK_API_SECRET +
-        "&min_date=" +
-        today +
-        "&max_date=" +
-        inOneYear
+        process.env.SONGKICK_API_SECRET
     )
     .then(function(response) {
-      res.json(response.data);
+      let finalResponse = { ...response.data };
+      axios
+        .get(
+          "https://api.songkick.com/api/3.0/venues/" +
+            req.params.id +
+            ".json?apikey=" +
+            process.env.SONGKICK_API_SECRET
+        )
+        .then(function(response2) {
+          finalResponse.resultsPage.results.venueDetails =
+            response2.data.resultsPage.results.venue;
+          res.json({ response: finalResponse.resultsPage.results });
+        })
+        .catch(function(error) {
+          res.json({ response: error });
+        });
+
     })
     .catch(function(error) {
       res.json(error);
