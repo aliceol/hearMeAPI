@@ -173,18 +173,21 @@ router.get("/getMyCalendar", isAuthenticated, function(req, res) {
     const myEvents = [];
     for (let i = 0; i < req.user.events.length; i++) {
       console.log(req.user.events[i]);
-      Event.findOne({ _id: req.user.events[i] }).exec((err, event) => {
-        console.log(event);
-        if (err) {
-          res.json(err);
-        } else {
-          myEvents.push(event);
-          if (i === req.user.events.length - 1) {
-            console.log("hello", myEvents);
-            res.json(myEvents);
+      Event.findOne({ _id: req.user.events[i] })
+        .populate("venue")
+        .populate("performance.artist")
+        .exec((err, event) => {
+          console.log(event);
+          if (err) {
+            res.json(err);
+          } else {
+            myEvents.push(event);
+            if (i === req.user.events.length - 1) {
+              console.log("hello", myEvents);
+              res.json(myEvents);
+            }
           }
-        }
-      });
+        });
     }
   } else {
     res.json({ error: "there is an error" });
@@ -201,10 +204,17 @@ router.get("/getMyInfo", isAuthenticated, function(req, res) {
 
 router.post("/uploadPicture", isAuthenticated, uploadPictures, function(
   req,
-  res
+  res,
+  next
 ) {
   if (req.pictures.length) {
-    res.json(req.pictures[0]);
+    req.user.account.profilePic = req.pictures[0];
+    req.user.save(err => {
+      if (!err) {
+        return res.json(req.pictures[0]);
+      }
+      return next(err.message);
+    });
   } else {
     res.json({ error: "there is an error" });
   }
