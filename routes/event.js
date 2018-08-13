@@ -13,16 +13,13 @@ const { doesEventExists } = require("../lib/songKick");
 var Event = require("../models/Event.js");
 var Artist = require("../models/Artist.js");
 var Venue = require("../models/Venue.js");
-var getData = require("../components/getData.js");
+var getEventImage = require("../components/getEventImage.js");
 
 // THIS ROAD GIVE US ALL THE INFOS ABOUT AN EVENT.
 // WE NEED THE EVENT ID TO GET ALL OF THIS
 
-getData(
-  "https://www.songkick.com/concerts/33657974-bollock-brothers-at-raumstation-sternen"
-);
-
 router.get("/:id", function(req, res) {
+  console.log("ok");
   // WE ARE LOOKING IN OUR DATABASE IF WE CAN FIND AN EVENT WITH THE SAME ID
   Event.findOne({ songKickId: req.params.id })
     .populate("venue")
@@ -119,12 +116,14 @@ router.get("/:id", function(req, res) {
                                     start: thisEvent.start,
                                     ageMin: thisEvent.ageRestriction,
                                     eventType: thisEvent.type,
-                                    photoURI: getData(thisEvent.uri).image.src,
-                                    aditionalDetails: getData(thisEvent.uri)
-                                      .aditionalDetails.text,
-                                    biography: getData(thisEvent.uri)
+                                    photoURI: getEventImage(thisEvent.uri).image
+                                      .src,
+                                    aditionalDetails: getEventImage(
+                                      thisEvent.uri
+                                    ).aditionalDetails.text,
+                                    biography: getEventImage(thisEvent.uri)
                                       .biographies.artistBio,
-                                    biographyLink: getData(thisEvent.uri)
+                                    biographyLink: getEventImage(thisEvent.uri)
                                       .biographies.link
                                   });
 
@@ -223,7 +222,7 @@ router.get("/:id", function(req, res) {
                                           .uri;
 
                                       new Promise((resolve, reject) => {
-                                        getData(URI)
+                                        getEventImage(URI)
                                           .then(extraData => {
                                             let thisEvent =
                                               response.data.resultsPage.results
