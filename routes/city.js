@@ -32,8 +32,8 @@ router.get("/upcoming/:id/:page", function(req, res) {
         today +
         "&max_date=" +
         inOneYear +
-        "&per_page" +
-        20 +
+        "&per_page=" +
+        10 +
         "&page=" +
         req.params.page
     )
@@ -71,7 +71,7 @@ router.get("/upcoming/:id/:page", function(req, res) {
     });
 });
 
-router.get("/popular/:id", function(req, res) {
+router.get("/popular/:id/:page", function(req, res) {
   // THE METRO AREA LOOK LIKE A NUMBER
   // FOR EXEMPLE PARIS IN FRANCE IS 28909
 
@@ -94,7 +94,7 @@ router.get("/popular/:id", function(req, res) {
 
   let gettingEventsPromises = [];
 
-  for (let i = 1; i <= 1; i++) {
+  for (let i = 1; i <= 5; i++) {
     gettingEventsPromises.push(
       axios.get(
         "https://api.songkick.com/api/3.0/metro_areas/" +
@@ -111,15 +111,11 @@ router.get("/popular/:id", function(req, res) {
     );
   }
 
-  Promise.all(gettingEventsPromises).then(values => {
+  /* Promise.all(gettingEventsPromises).then(values => {
     let eventsByPop = [];
     let gettingArtistsPicsPromises = [];
     for (let i = 0; i < values.length; i++) {
-      for (
-        let j = 0;
-        j < values[i].data.resultsPage.results.event.length;
-        j++
-      ) {
+      for (let j = (req.params.page - 1) * 10; j < req.params.page * 10; j++) {
         gettingArtistsPicsPromises.push(
           getArtistImage(
             values[i].data.resultsPage.results.event[j].performance[0].artist
@@ -140,14 +136,77 @@ router.get("/popular/:id", function(req, res) {
       let eventsWithLocation = [];
       for (let i = 0; i < eventsByPop.length; i++) {
         if (eventsByPop[i].venue.displayName !== "Unknown venue") {
+          console.log(eventsByPop.length, eventsByPop[i].id);
           eventsWithLocation.push(eventsByPop[i]);
         }
       }
+
       res.json(eventsWithLocation);
     });
-  });
+  }); */
 
-  /*   let myData = [];
+  Promise.all(gettingEventsPromises).then(values => {
+    let allEvents = [];
+    let gettingArtistsPicsPromises = [];
+    for (let i = 0; i < values.length; i++) {
+      for (
+        let j = 0;
+        j < values[i].data.resultsPage.results.event.length;
+        j++
+      ) {
+        allEvents.push(values[i].data.resultsPage.results.event[j]);
+      }
+    }
+    let eventsByPop = allEvents.sort(sort_by("popularity", true, parseFloat));
+
+    for (let j = (req.params.page - 1) * 10; j < req.params.page * 10; j++) {
+      gettingArtistsPicsPromises.push(
+        getArtistImage(eventsByPop[j].performance[0].artist.uri)
+      );
+    }
+    Promise.all(gettingArtistsPicsPromises).then(URIObjects => {
+      for (let i = 0; i < URIObjects.length; i++) {
+        eventsByPop[
+          i + (req.params.page - 1) * 10
+        ].performance[0].artist.pictureURI = URIObjects[i][0]
+          ? URIObjects[i][0].src
+          : null;
+      }
+      res.json(
+        eventsByPop.slice((req.params.page - 1) * 10, req.params.page * 10)
+      );
+    });
+
+    /*   for (let j = (req.params.page - 1) * 10; j < req.params.page * 10; j++) {
+      gettingArtistsPicsPromises.push(
+        getArtistImage(
+          values[i].data.resultsPage.results.event[j].performance[0].artist.uri
+        )
+      );
+      eventsByPop.push(values[i].data.resultsPage.results.event[j]);
+    }
+    Promise.all(gettingArtistsPicsPromises).then(URIObjects => {
+      for (let i = 0; i < URIObjects.length; i++) {
+        eventsByPop[i].performance[0].artist.pictureURI = URIObjects[i][0]
+          ? URIObjects[i][0].src
+          : null;
+      }
+
+      eventsByPop.sort(sort_by("popularity", true, parseFloat));
+      let eventsWithLocation = [];
+      for (let i = 0; i < eventsByPop.length; i++) {
+        if (eventsByPop[i].venue.displayName !== "Unknown venue") {
+          console.log(eventsByPop.length, eventsByPop[i].id);
+          eventsWithLocation.push(eventsByPop[i]);
+        }
+      }
+
+      res.json(eventsWithLocation);
+    }); */
+  });
+});
+
+/*   let myData = [];
   let i = 1;
   const getData = function(i) {
     if (i <= 5) {
@@ -199,7 +258,6 @@ router.get("/popular/:id", function(req, res) {
   };
 
   getData(1); */
-});
 
 // router.get("/popular/:id/:page", function(req, res) {
 //   // THE METRO AREA LOOK LIKE A NUMBER
