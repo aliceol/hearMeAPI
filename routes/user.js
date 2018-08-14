@@ -74,8 +74,6 @@ router.get("/like/artist/:id", isAuthenticated, function(req, res, next) {
       if (err) {
         res.json(err);
       } else {
-        console.log("-------", req.user.favArtists);
-        console.log("-------", req.user.favArtists.indexOf(artist.songKickId));
         if (req.user.favArtists.indexOf(artist._id) !== -1) {
           const index = req.user.favArtists.indexOf(artist._id);
           req.user.favArtists.splice(index, 1);
@@ -91,10 +89,7 @@ router.get("/like/artist/:id", isAuthenticated, function(req, res, next) {
             }
           });
         } else {
-          console.log(artist);
           req.user.favArtists.push(artist);
-          console.log("fav", req.user.favArtists);
-
           req.user.save(function(err) {
             // THEN SAVE IT
             if (err) {
@@ -151,7 +146,6 @@ router.get("/getMyLikes", isAuthenticated, function(req, res) {
   if (req.user) {
     const myArtists = [];
     const promises = [];
-    console.log("user", req.user);
     for (let i = 0; i < req.user.favArtists.length; i++) {
       promises.push(Artist.findOne({ _id: req.user.favArtists[i] }));
     }
@@ -177,26 +171,18 @@ router.get("/getMyCalendar", isAuthenticated, function(req, res) {
   if (req.user) {
     const promises = [];
     for (let i = 0; i < req.user.events.length; i++) {
-      promises.push(Event.findOne({ _id: req.user.events[i] }));
+      promises.push(
+        Event.findOne({ _id: req.user.events[i] })
+          .populate("performance.artist")
+          .populate("venue")
+      );
     }
 
     Promise.all(promises).then(events => {
       res.json(events);
     });
-    /* Event.findOne({ _id: req.user.events[i] }).exec((err, event) => {
-        if (err) {
-          res.json(err);
-        } else {
-          myEvents.push(event);
-          console.log(req.user.events.length);
-          console.log(i);
-          if (i === req.user.events.length - 1) {
-            res.json(myEvents);
-          }
-        }
-      }); */
   } else {
-    //res.json({ error: "there is an error" });
+    res.json({ error: "there is an error" });
   }
 });
 

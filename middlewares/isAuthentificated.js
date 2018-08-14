@@ -11,14 +11,12 @@ module.exports = (req, res, next) => {
         if (!user) {
           return res.status(401).json({ error: "Unauthorized" });
         } else {
-          console.log("authorized");
           req.user = user;
           return next();
         }
       }
     );
   } else {
-    console.log("unauthorized");
     return res.status(401).json({ error: "Unauthorized" });
   }
 };
