@@ -35,7 +35,9 @@ router.post("/sign_up", function(req, res, next) {
       return res.json({
         _id: user._id,
         token: user.token,
-        account: user.account
+        account: user.account,
+        favArtists : user.favArtists,
+        events : user.events
       });
     }
   });
@@ -54,7 +56,9 @@ router.post("/log_in", function(req, res, next) {
           return res.json({
             _id: user._id,
             token: user.token,
-            account: user.account
+            account: user.account,
+            favArtists : user.favArtists,
+            events : user.events
           });
         } else {
           return res.status(401).json({ error: "Unauthorized" });
@@ -199,6 +203,14 @@ router.get("/getMyCalendar", isAuthenticated, function(req, res) {
 
   } else {
     //res.json({ error: "there is an error" });
+  }
+});
+
+router.get("/getMyInfo", isAuthenticated, function(req, res) {
+  if (req.user) {
+    res.json(req.user.account.userName);
+  } else {
+    res.json({ error: "there is an error" });
   }
 });
 
