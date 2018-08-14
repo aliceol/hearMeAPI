@@ -43,12 +43,15 @@ router.get("/:id", function(req, res) {
             .then(function(response) {
               Venue.findOne({
                 // FIRST WE ARE LOOKING IN OUR DATABASE IF WE HAVE THE INFOS ABOUT THE VENUE
-                songKickId: response.data.resultsPage.results.event.venue.id
-              }).exec(err, obj => {
+                songKickId: Number(
+                  response.data.resultsPage.results.event.venue.id
+                )
+              }).exec(err, venue => {
                 if (err) {
                 } else {
                   const arrayArtists = [];
-                  if (obj) {
+                  if (venue) {
+                    console.log("hello");
                     // IF THE VENUE ALREADY EXISTS IN THE DATA BASE, WE NEED TO KNOW IF THE ARTISTS PLAYING
                     // THERE ARE IN THE DB
 
@@ -147,6 +150,7 @@ router.get("/:id", function(req, res) {
                         });
                     }
                   } else {
+                    console.log("ouppppsss");
                     // IF THE VENUE IS NOT IN THE DB
                     const venue = response.data.resultsPage.results.event.venue;
                     const newVenue = new Venue({

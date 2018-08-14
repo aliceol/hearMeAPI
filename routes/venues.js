@@ -50,9 +50,10 @@ router.get("/:id", function(req, res) {
         .catch(function(error) {
           res.json({ response: error });
         });
+
     })
     .catch(function(error) {
-      res.json({ response: error });
+      res.json(error);
     });
 });
 
