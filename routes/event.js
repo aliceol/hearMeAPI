@@ -19,7 +19,6 @@ var getEventImage = require("../components/getEventImage.js");
 // WE NEED THE EVENT ID TO GET ALL OF THIS
 
 router.get("/:id", function(req, res) {
-  console.log("ok");
   // WE ARE LOOKING IN OUR DATABASE IF WE CAN FIND AN EVENT WITH THE SAME ID
   Event.findOne({ songKickId: req.params.id })
     .populate("venue")
@@ -54,7 +53,7 @@ router.get("/:id", function(req, res) {
                     // THERE ARE IN THE DB
 
                     const artists = [];
-
+                    const artistsPromises = [];
                     for (
                       let i = 0;
                       i <
@@ -71,77 +70,81 @@ router.get("/:id", function(req, res) {
                             .billingIndex
                       });
                     }
-
                     for (let i = 0; i < artists.length; i++) {
-                      Artist.findOne({
-                        songKickId: artists[i].artist.id
-                      }).exec(err, artist => {
-                        if (err) {
-                          // IF THE ARTIST ID DOES NOT EXISTS
-                        } else {
-                          if (artist) {
-                            // IF THE ARTIST IS ALREADY KNOW BY OUR DB, WE JUST PUSH THESE INFOS FROM OUR DB TO AN ARRAY
-                            arrayArtists.push({
-                              artist: artists.artist,
-                              position: artists[i].position
-                            });
+                      artistsPromises
+                        .push(
+                          Artist.findOne({
+                            songKickId: artists[i].artist.id
+                          })
+                        )
+                        .then(err, artist => {
+                          if (err) {
+                            // IF THE ARTIST ID DOES NOT EXISTS
                           } else {
-                            // THE ARTIST IS UNKNOW SO WE CREATE A NEW ONE IN OUR DB
-                            const newArtist = new Artist({
-                              uri: artists[i].artist.uri,
-                              displayName: artists[i].artist.displayName,
-                              songKickId: artists[i].artist.id
-                              // identifier: artists[i].artist.identifier.href // A LINK TO HIS SONGKICK PROFIL
-                            });
-                            newArtist.save((err, artist) => {
-                              if (err) {
-                              } else {
-                                // WE SAVE IT THEN WE PUSH THE INFOS THAT WE NEED IN AN ARRAY THAT WILL BE RETURN TO OUR USERS
-                                arrayArtists.push({
-                                  artist: artist._id,
-                                  position: artists[i].position
-                                });
-                                if (i === artists.length - 1) {
-                                  let thisEvent =
-                                    response.data.resultsPage.resultsPage
-                                      .results.event;
-
-                                  const event = new Event({
-                                    songKickId: thisEvent.id,
-                                    venue: obj,
-                                    popularity: thisEvent.popularity,
-                                    uri: thisEvent.uri,
-                                    title: thisEvent.displayName,
-                                    performance: arrayArtists,
-                                    start: thisEvent.start,
-                                    ageMin: thisEvent.ageRestriction,
-                                    eventType: thisEvent.type,
-                                    photoURI: getEventImage(thisEvent.uri).image
-                                      .src,
-                                    aditionalDetails: getEventImage(
-                                      thisEvent.uri
-                                    ).aditionalDetails.text,
-                                    biography: getEventImage(thisEvent.uri)
-                                      .biographies.artistBio,
-                                    biographyLink: getEventImage(thisEvent.uri)
-                                      .biographies.link
+                            if (artist) {
+                              // IF THE ARTIST IS ALREADY KNOW BY OUR DB, WE JUST PUSH THESE INFOS FROM OUR DB TO AN ARRAY
+                              arrayArtists.push({
+                                artist: artists.artist,
+                                position: artists[i].position
+                              });
+                            } else {
+                              // THE ARTIST IS UNKNOW SO WE CREATE A NEW ONE IN OUR DB
+                              const newArtist = new Artist({
+                                uri: artists[i].artist.uri,
+                                displayName: artists[i].artist.displayName,
+                                songKickId: artists[i].artist.id
+                                // identifier: artists[i].artist.identifier.href // A LINK TO HIS SONGKICK PROFIL
+                              });
+                              newArtist.save((err, artist) => {
+                                if (err) {
+                                } else {
+                                  // WE SAVE IT THEN WE PUSH THE INFOS THAT WE NEED IN AN ARRAY THAT WILL BE RETURN TO OUR USERS
+                                  arrayArtists.push({
+                                    artist: artist._id,
+                                    position: artists[i].position
                                   });
+                                  if (i === artists.length - 1) {
+                                    let thisEvent =
+                                      response.data.resultsPage.resultsPage
+                                        .results.event;
 
-                                  event.save(function(err) {
-                                    if (err) {
-                                      return res.json(err.message);
-                                    } else {
-                                      return res.json({
-                                        response: response.data
-                                      });
-                                    }
-                                  });
+                                    const event = new Event({
+                                      songKickId: thisEvent.id,
+                                      venue: obj,
+                                      popularity: thisEvent.popularity,
+                                      uri: thisEvent.uri,
+                                      title: thisEvent.displayName,
+                                      performance: arrayArtists,
+                                      start: thisEvent.start,
+                                      ageMin: thisEvent.ageRestriction,
+                                      eventType: thisEvent.type,
+                                      photoURI: getEventImage(thisEvent.uri)
+                                        .image.src,
+                                      aditionalDetails: getEventImage(
+                                        thisEvent.uri
+                                      ).aditionalDetails.text,
+                                      biography: getEventImage(thisEvent.uri)
+                                        .biographies.artistBio,
+                                      biographyLink: getEventImage(
+                                        thisEvent.uri
+                                      ).biographies.link
+                                    });
+
+                                    event.save(function(err) {
+                                      if (err) {
+                                        return res.json(err.message);
+                                      } else {
+                                        return res.json({
+                                          response: response.data
+                                        });
+                                      }
+                                    });
+                                  }
                                 }
-                              }
-                            });
+                              });
+                            }
                           }
-                        }
-                      });
+                        });
                     }
                   } else {
                     // IF THE VENUE IS NOT IN THE DB

@@ -15,7 +15,6 @@ let today = moment().format("YYYY-MM-DD");
 var inOneYear = moment()
   .add(1, "year")
   .format("YYYY-MM-DD");
-console.log(inOneYear);
 
 // ROAD TO FIND A VENUE CALENDAR
 

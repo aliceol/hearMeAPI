@@ -30,17 +30,15 @@ const uploadPictures = (req, res, next) => {
           public_id: `hearme/${req.user_id}`
         },
         (error, result) => {
-          /* console.log(error, result); */
           if (error) {
             // if there is an error upload, I get out of my route
             return res.status(500).json({ error });
           }
-          console.log("upload OK");
           // else i push my image to to the array
           pictures.push(result);
           // and I increment the amount of uploaded images
           filesUploaded++;
-          console.log("-------\n", result);
+
           // if the amount of uploaded pictures === the amount of sent files
           if (filesUploaded === files.length) {
             req.pictures = pictures;
