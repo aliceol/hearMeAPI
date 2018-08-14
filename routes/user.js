@@ -177,7 +177,6 @@ router.get("/getMyCalendar", isAuthenticated, function(req, res) {
   if (req.user) {
     const promises = [];
     for (let i = 0; i < req.user.events.length; i++) {
-
       promises.push(Event.findOne({ _id: req.user.events[i] }));
     }
 
@@ -196,9 +195,16 @@ router.get("/getMyCalendar", isAuthenticated, function(req, res) {
           }
         }
       }); */
-
   } else {
     //res.json({ error: "there is an error" });
+  }
+});
+
+router.get("/getMyInfo", isAuthenticated, function(req, res) {
+  if (req.user) {
+    res.json(req.user.account.userName);
+  } else {
+    res.json({ error: "there is an error" });
   }
 });
 
@@ -223,6 +229,44 @@ router.post("/uploadPicture", isAuthenticated, uploadPictures, function(
       }
       return next(err.message);
     });
+  } else {
+    res.json({ error: "there is an error" });
+  }
+});
+
+router.post("/changeMyUserName", isAuthenticated, function(req, res) {
+  if (req.user) {
+    User.findOneAndUpdate(
+      { "account.userName": req.user.account.userName },
+      { $set: { "account.userName": req.body.userName } },
+      { new: true },
+      function(err, user) {
+        if (user) {
+          res.json(user);
+        } else {
+          res.json("We fail trying to change your username");
+        }
+      }
+    );
+  } else {
+    res.json({ error: "there is an error" });
+  }
+});
+
+router.post("/changeMyEmail", isAuthenticated, function(req, res) {
+  if (req.user) {
+    User.findOneAndUpdate(
+      { "account.email": req.user.account.email },
+      { $set: { "account.email": req.body.email } },
+      { new: true },
+      function(err, user) {
+        if (user) {
+          res.json(user);
+        } else {
+          res.json("We fail trying to change your email");
+        }
+      }
+    );
   } else {
     res.json({ error: "there is an error" });
   }
