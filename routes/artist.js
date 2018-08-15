@@ -30,12 +30,37 @@ router.get("/:id/:page", function(req, res) {
         inOneYear +
         "&page=" +
         req.params.page +
-        "&per_page=20"
+        "&per_page=50"
     )
     .then(function(response) {
-      axios.get("");
-
-      res.json({ response: response.data });
+      let artistResponse = response.data;
+      let dashIndex = req.params.id.indexOf("-");
+      let artistId;
+      for (
+        let i = 0;
+        i < response.data.resultsPage.results.event[0].performance.length;
+        i++
+      ) {
+        if (
+          response.data.resultsPage.results.event[0].performance[i].artist.id ==
+          req.params.id
+        ) {
+          getArtistImageURI = new Promise(() =>
+            getArtistImage(
+              response.data.resultsPage.results.event[0].performance[i].artist
+                .uri
+            ).then(URIObject => {
+              artistResponse.resultsPage.results.artistPicURI =
+                URIObject[0].src;
+              artistResponse.resultsPage.results.artistId =
+                response.data.resultsPage.results.event[0].performance[
+                  i
+                ].artist.id;
+              res.json({ response: artistResponse });
+            })
+          );
+        }
+      }
     })
     .catch(function(error) {
       res.json({ response: error });
