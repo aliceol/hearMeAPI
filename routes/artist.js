@@ -50,8 +50,10 @@ router.get("/:id/:page", function(req, res) {
               response.data.resultsPage.results.event[0].performance[i].artist
                 .uri
             ).then(URIObject => {
-              artistResponse.resultsPage.results.artistPicURI =
-                URIObject[0].src;
+              artistResponse.resultsPage.results.artistPicURI = URIObject[0]
+                ? URIObject[0].src
+                : null;
+
               artistResponse.resultsPage.results.artistId =
                 response.data.resultsPage.results.event[0].performance[
                   i
