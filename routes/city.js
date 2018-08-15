@@ -39,16 +39,44 @@ router.get("/upcoming/:id/:page", function(req, res) {
     )
     .then(function(response) {
       let event = [];
+      let upcomingEventsPicturesPromises = [];
+      let numberOfEvents = response.data.resultsPage.results.event.length;
       for (let i = 0; i < response.data.resultsPage.results.event.length; i++) {
-        let numberOfEvents = response.data.resultsPage.results.event.length;
-        new Promise((resolve, reject) => {
+        let oneEvent = response.data.resultsPage.results.event[i];
+        upcomingEventsPicturesPromises.push(
+          getArtistImage(oneEvent.performance[0].artist.uri)
+        );
+      }
+
+      Promise.all(upcomingEventsPicturesPromises).then(URIObjects => {
+        for (let i = 0; i < URIObjects.length; i++) {
+          let oneEvent = response.data.resultsPage.results.event[i];
+          oneEvent.performance[0].artist.pictureURI = URIObjects[0]
+            ? URIObjects[0].src
+            : null;
+          if (
+            response.data.resultsPage.results.event[i].venue.displayName !==
+            "Unknown venue"
+          ) {
+            event.push(oneEvent);
+          } else {
+            numberOfEvents -= 1;
+          }
+          if (event.length === numberOfEvents) {
+            res.json(event);
+          }
+        }
+      });
+      /* new Promise((resolve, reject) => {
           let oneEvent = response.data.resultsPage.results.event[i];
 
           getArtistImage(oneEvent.performance[0].artist.uri).then(URI => {
             oneEvent.performance[0].artist.pictureURI = URI[0]
               ? URI[0].src
               : null;
-
+            console.log(
+              response.data.resultsPage.results.event[i].venue.displayName
+            );
             if (
               response.data.resultsPage.results.event[i].venue.displayName !==
               "Unknown venue"
@@ -57,12 +85,14 @@ router.get("/upcoming/:id/:page", function(req, res) {
             } else {
               numberOfEvents -= 1;
             }
+            console.log(i, event.length, numberOfEvents);
             if (event.length === numberOfEvents) {
+              console.log("event", event);
               res.json(event);
             }
           });
         });
-      }
+       */
     })
 
     .catch(function(error) {
