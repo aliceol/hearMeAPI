@@ -51,7 +51,6 @@ router.get("/:id", function(req, res) {
                 } else {
                   const arrayArtists = [];
                   if (venue) {
-                    console.log("hello");
                     // IF THE VENUE ALREADY EXISTS IN THE DATA BASE, WE NEED TO KNOW IF THE ARTISTS PLAYING
                     // THERE ARE IN THE DB
 
@@ -150,7 +149,6 @@ router.get("/:id", function(req, res) {
                         });
                     }
                   } else {
-                    console.log("ouppppsss");
                     // IF THE VENUE IS NOT IN THE DB
                     const venue = response.data.resultsPage.results.event.venue;
                     const newVenue = new Venue({
