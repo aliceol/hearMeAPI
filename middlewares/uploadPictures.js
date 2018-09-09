@@ -12,12 +12,10 @@ cloudinary.config({
 });
 
 const uploadPictures = (req, res, next) => {
-  console.log("uploadPictures");
   //initialize an empty array for my uploaded images
   const pictures = [];
   // I retrieve a array with the files
   const files = req.body.files;
-  console.log("files", files.length);
   // I initialize the number of uploads to zero
   let filesUploaded = 0;
   // for each file in the array, I create an upload to Cloudinary
@@ -43,7 +41,6 @@ const uploadPictures = (req, res, next) => {
           filesUploaded++;
 
           // if the amount of uploaded pictures === the amount of sent files
-          console.log("filesuploaded", " files.length ", files.length);
           if (filesUploaded === files.length) {
             req.pictures = pictures;
             next();
