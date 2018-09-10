@@ -33,7 +33,7 @@ router.get("/upcoming/:id/:page", function(req, res) {
         "&max_date=" +
         inOneYear +
         "&per_page=" +
-        10 +
+        20 +
         "&page=" +
         req.params.page
     )
@@ -51,9 +51,12 @@ router.get("/upcoming/:id/:page", function(req, res) {
       Promise.all(upcomingEventsPicturesPromises).then(URIObjects => {
         for (let i = 0; i < URIObjects.length; i++) {
           let oneEvent = response.data.resultsPage.results.event[i];
-          oneEvent.performance[0].artist.pictureURI = URIObjects[0]
-            ? URIObjects[0].src
+          console.log("before", oneEvent.performance[0].artist);
+          console.log(URIObjects[i]);
+          oneEvent.performance[0].artist.pictureURI = URIObjects[i][0]
+            ? URIObjects[i][0].src
             : null;
+          console.log("after", oneEvent.performance[0].artist);
           if (
             response.data.resultsPage.results.event[i].venue.displayName !==
             "Unknown venue"
@@ -175,6 +178,8 @@ router.get("/popular/:id/:page", function(req, res) {
     });
   }); */
 
+  let RESULTS_PER_PAGE = 20;
+
   Promise.all(gettingEventsPromises).then(values => {
     let allEvents = [];
     let gettingArtistsPicsPromises = [];
@@ -189,7 +194,11 @@ router.get("/popular/:id/:page", function(req, res) {
     }
     let eventsByPop = allEvents.sort(sort_by("popularity", true, parseFloat));
 
-    for (let j = (req.params.page - 1) * 10; j < req.params.page * 10; j++) {
+    for (
+      let j = (req.params.page - 1) * RESULTS_PER_PAGE;
+      j < req.params.page * RESULTS_PER_PAGE;
+      j++
+    ) {
       gettingArtistsPicsPromises.push(
         getArtistImage(eventsByPop[j].performance[0].artist.uri)
       );
@@ -197,13 +206,16 @@ router.get("/popular/:id/:page", function(req, res) {
     Promise.all(gettingArtistsPicsPromises).then(URIObjects => {
       for (let i = 0; i < URIObjects.length; i++) {
         eventsByPop[
-          i + (req.params.page - 1) * 10
+          i + (req.params.page - 1) * RESULTS_PER_PAGE
         ].performance[0].artist.pictureURI = URIObjects[i][0]
           ? URIObjects[i][0].src
           : null;
       }
       res.json(
-        eventsByPop.slice((req.params.page - 1) * 10, req.params.page * 10)
+        eventsByPop.slice(
+          (req.params.page - 1) * RESULTS_PER_PAGE,
+          req.params.page * RESULTS_PER_PAGE
+        )
       );
     });
 
