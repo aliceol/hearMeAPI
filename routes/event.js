@@ -14,6 +14,7 @@ var Event = require("../models/Event.js");
 var Artist = require("../models/Artist.js");
 var Venue = require("../models/Venue.js");
 var getEventImage = require("../components/getEventImage.js");
+var getArtistImage = require("../components/getArtistImage.js");
 
 // THIS ROAD GIVE US ALL THE INFOS ABOUT AN EVENT.
 // WE NEED THE EVENT ID TO GET ALL OF THIS
@@ -91,6 +92,14 @@ router.get("/:id", function(req, res) {
                               });
                             } else {
                               // THE ARTIST IS UNKNOW SO WE CREATE A NEW ONE IN OUR DB
+                              new Promise((resolve, reject) => {
+                                getArtistImage(artists[i].artist.uri).then(
+                                  extraData => {
+                                    console.log("extraData", extraData);
+                                  }
+                                );
+                              });
+
                               const newArtist = new Artist({
                                 uri: artists[i].artist.uri,
                                 displayName: artists[i].artist.displayName,
@@ -98,6 +107,7 @@ router.get("/:id", function(req, res) {
                                 // identifier: artists[i].artist.identifier.href // A LINK TO HIS SONGKICK PROFIL
                               });
                               newArtist.save((err, artist) => {
+                                console.log("save112");
                                 if (err) {
                                 } else {
                                   // WE SAVE IT THEN WE PUSH THE INFOS THAT WE NEED IN AN ARRAY THAT WILL BE RETURN TO OUR USERS
@@ -133,6 +143,7 @@ router.get("/:id", function(req, res) {
                                     });
 
                                     event.save(function(err) {
+                                      console.log("save148");
                                       if (err) {
                                         return res.json(err.message);
                                       } else {
@@ -166,6 +177,7 @@ router.get("/:id", function(req, res) {
                       website: venue.website
                     });
                     newVenue.save((err, venue) => {
+                      console.log("save182");
                       // THEN WE SAVE IT IN OUR DB
                       if (err) {
                       } else {
@@ -204,77 +216,113 @@ router.get("/:id", function(req, res) {
                                 });
                               } else {
                                 // THE ARTIST IS UNKNOW SO WE CREATE A NEW ONE IN OUR DB
-
-                                const newArtist = new Artist({
-                                  uri: artists[i].artist.uri,
-                                  displayName: artists[i].artist.displayName,
-                                  songKickId: artists[i].artist.id
-                                  // identifier:
-                                  //   artists[i].artist.identifier[0].mbid // A LINK TO HIS SONGKICK PROFIL
-                                });
-
-                                newArtist.save((err, artist) => {
-                                  if (err) {
-                                  } else {
-                                    // WE SAVE IT THEN WE PUSH THE INFOS THAT WE NEED IN AN ARRAY THAT WILL BE RETURNED TO OUR USERS
-                                    arrayArtists.push({
-                                      artist: artist._id,
-                                      position: artists[i].position
-                                    });
-                                    if (i === artists.length - 1) {
-                                      let URI =
-                                        response.data.resultsPage.results.event
-                                          .uri;
-
-                                      new Promise((resolve, reject) => {
-                                        getEventImage(URI)
-                                          .then(extraData => {
-                                            let thisEvent =
-                                              response.data.resultsPage.results
-                                                .event;
-                                            const event = new Event({
-                                              songKickId: thisEvent.id,
-                                              venue: venue,
-                                              popularity: thisEvent.popularity,
-                                              uri: URI,
-                                              title: thisEvent.displayName
-                                                ? thisEvent.displayName
-                                                : "",
-                                              performance: arrayArtists,
-                                              start: thisEvent.start,
-                                              ageMin: thisEvent.ageRestriction,
-                                              eventType: thisEvent.type,
-                                              photoURI: extraData.image
-                                                ? extraData.image[0].src
-                                                : null,
-                                              aditionalDetails: extraData.aditionalDetails
-                                                ? extraData.aditionalDetails[0]
-                                                    .text
-                                                : null,
-                                              biography: extraData
-                                                .biographies[0]
-                                                ? extraData.biographies[0]
-                                                    .artistBio
-                                                : null,
-                                              biographyLink: extraData
-                                                .biographies[0]
-                                                ? extraData.biographies[0].link
-                                                : null
-                                            });
-
-                                            event.save(function(err) {
-                                              if (err) {
-                                                return res.json(err.message);
-                                              } else {
-                                                return res.json(event);
-                                              }
-                                            });
-                                            // resolve(data);
-                                          })
-                                          .catch(error => console.log(error));
+                                new Promise((resolve, reject) => {
+                                  getArtistImage(artists[i].artist.uri)
+                                    .then(extraData => {
+                                      console.log(
+                                        "extraData2",
+                                        artists[i].artist.uri,
+                                        extraData
+                                      );
+                                      const newArtist = new Artist({
+                                        uri: artists[i].artist.uri,
+                                        displayName:
+                                          artists[i].artist.displayName,
+                                        songKickId: artists[i].artist.id,
+                                        pictureURI: extraData[0]
+                                          ? extraData[0].src
+                                          : null
+                                        // identifier:
+                                        //   artists[i].artist.identifier[0].mbid // A LINK TO HIS SONGKICK PROFIL
                                       });
-                                    }
-                                  }
+
+                                      newArtist.save((err, artist) => {
+                                        console.log("save242");
+                                        if (err) {
+                                        } else {
+                                          // WE SAVE IT THEN WE PUSH THE INFOS THAT WE NEED IN AN ARRAY THAT WILL BE RETURNED TO OUR USERS
+                                          arrayArtists.push({
+                                            artist: artist._id,
+                                            position: artists[i].position
+                                          });
+                                          if (i === artists.length - 1) {
+                                            let URI =
+                                              response.data.resultsPage.results
+                                                .event.uri;
+
+                                            new Promise((resolve, reject) => {
+                                              getEventImage(URI)
+                                                .then(extraData => {
+                                                  let thisEvent =
+                                                    response.data.resultsPage
+                                                      .results.event;
+                                                  const event = new Event({
+                                                    songKickId: thisEvent.id,
+                                                    venue: venue,
+                                                    popularity:
+                                                      thisEvent.popularity,
+                                                    uri: URI,
+                                                    title: thisEvent.displayName
+                                                      ? thisEvent.displayName
+                                                      : "",
+                                                    performance: arrayArtists,
+                                                    start: thisEvent.start,
+                                                    ageMin:
+                                                      thisEvent.ageRestriction,
+                                                    eventType: thisEvent.type,
+                                                    photoURI: extraData.image
+                                                      ? extraData.image[0].src
+                                                      : null,
+                                                    aditionalDetails: extraData.aditionalDetails
+                                                      ? extraData
+                                                          .aditionalDetails[0]
+                                                          .text
+                                                      : null,
+                                                    biography: extraData
+                                                      .biographies[0]
+                                                      ? extraData.biographies[0]
+                                                          .artistBio
+                                                      : null,
+                                                    biographyLink: extraData
+                                                      .biographies[0]
+                                                      ? extraData.biographies[0]
+                                                          .link
+                                                      : null
+                                                  });
+
+                                                  event.save(function(err) {
+                                                    console.log("save296");
+                                                    if (err) {
+                                                      return res.json(
+                                                        err.message
+                                                      );
+                                                    } else {
+                                                      Event.findOne({
+                                                        songKickId: thisEvent.id
+                                                      })
+                                                        .populate("venue")
+                                                        .populate(
+                                                          "performance.artist"
+                                                        )
+                                                        .exec(function(
+                                                          err,
+                                                          obj
+                                                        ) {
+                                                          return res.json(obj);
+                                                        });
+                                                    }
+                                                  });
+                                                  // resolve(data);
+                                                })
+                                                .catch(error =>
+                                                  console.log(error)
+                                                );
+                                            });
+                                          }
+                                        }
+                                      });
+                                    })
+                                    .catch(error => console.log(error));
                                 });
                               }
                             }
